@@ -1,12 +1,12 @@
 # 🧠 Effects of Mental Health on Substance Use 💊
 
-# 👀 See the code [HERE](https://nimj34.github.io/Effects-of-Mental-Health-on-Substance-Use/)
+# 👀 See the project [HERE](https://nimj34.github.io/Effects-of-Mental-Health-on-Substance-Use/)
 
 The original data used in this project can be found in the "original_nsduh_data" folder and is labelled "NSDUH_2023.sav".
 The cleaned data containing only the relevant variables is labelled "clean_nsduh_data".
 
 ## 📊 Skills Showcased
-
+R, Data Analysis, Data Visualization, Descriptive Statistics, Binary Logistic Regression, Plot Diagnostics, Literature Review, Tableau
 
 ## 🤷 Research Question
 How does mental health influence substance use in lesbian, gay and bisexual (LGB) individuals compared to their non-LGB counterparts?
@@ -18,6 +18,17 @@ NOTE: Since there are no questions asking about if respondents are transgender, 
 2. LGB individuals who report experiencing a past year major depressive episode will be more likely to engage in regular substance use (alcohol, cigarette, and marijuana) compared to non-LGB individuals.
 3. LGB individuals who have experienced serious psychological distress in the past month will be more likely to have a higher frequency of binge drinking in the past month compared to non-LGB individuals.
 4. LGB individuals who have had suicidal thoughts, plans, or attempts in the past year will be more likely to have a substance use disorder compared to non-LGB individuals.
+
+## 📉 Key Findings
+The hypotheses surrounding the relationship between substance use (alcohol, cigarettes, and marijuana) and mental health outcomes for LGB individuals were not supported likely due to the fact that LGB individuals only made up around 14.4% of the sample. 
+
+Individuals who have experienced a major depressive episode in the past year are nearly 8 times more likely to have experienced severe psychological distress in the past monht. 
+
+Those with suicidal plans, thoughts, or attempts are 5.5 times more likely to experience psychological distress.
+
+LGB individuals were around twice as likely as non-LGB individuals to experience severe psychological distress, major depressive episodes, and suicidality.
+
+People with more frequent cigarette and marijuana use are more likely to experience negative mental health outcomes.
 
 ## 📖 Variables
 The data found in this project is from the [2023 National Survey on Drug Use and Health](https://www.samhsa.gov/data/data-we-collect/nsduh-national-survey-drug-use-and-health/national-releases/2023). This survey measures substance use, mental illness, and treatment in the civilian non-institutionalized population aged 12 or older. For the purposes of this project, however, I will only be focusing on adults. 
@@ -104,4 +115,3 @@ Values:
 * 0 = No
 * 1 = Yes
 
-## 📉 Findings
