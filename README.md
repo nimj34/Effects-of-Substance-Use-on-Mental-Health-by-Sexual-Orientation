@@ -1,6 +1,6 @@
 # 🧠 Effects of Mental Health on Substance Use 💊
 
-# 👀 See the code [HERE]()
+# 👀 See the code [HERE](https://nimj34.github.io/Effects-of-Mental-Health-on-Substance-Use/)
 
 The original data used in this project can be found in the "original_nsduh_data" folder and is labelled "NSDUH_2023.sav".
 The cleaned data containing only the relevant variables is labelled "clean_nsduh_data".
