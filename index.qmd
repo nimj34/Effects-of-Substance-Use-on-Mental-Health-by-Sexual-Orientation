@@ -43,6 +43,7 @@ library(broom.helpers)
 library(expss)
 library(pscl)
 library(pROC)
+library(arrow)
 ```
 
 ```{r, fig.alt = "Directed acyclic graph showing the relationship between the independent variable- psychological distress and the dependent variable- regular substance use. This relationship is hypothesized to be moderated by sexual orientaton."}
@@ -182,7 +183,7 @@ The data found in this project is from the [2023 National Survey on Drug Use and
 First, we need to read in the data and keep only certain columns of interest. We will also rename the columns to make them more readable/understandable.
 
 ```{r}
-path = file.path("~/GitHub/Effects-of-Mental-Health-on-Substance-Use/original_nsduh_data/NSDUH_2023.sav")
+path = file.path("~/GitHub/Effects/original_nsduh_data/NSDUH_2023.sav")
 
 df = read_sav(path, col_select = c(CATAG6, IRSEX, CIG30USE, PMNICDEP, ALCDAYS, ALCBNG30D, MJDAY30A, IRPYUD5ALC, IRPYUD5MRJ, SPDPSTMON, ADSUITPAYR, AMDEYR, SEXIDENT22))
 
@@ -472,12 +473,12 @@ new_df = apply_labels(new_df,
                       sex_orient3 = "Sexual Orientation")
 ```
 
-#### **Saving Cleaned Data as CSV File**
+#### **Saving Cleaned Data as Parquet File**
+
+There were some issues when I tried saving this dataframe as a CSV, so instead I saved it as a Parquet file. After doing so, I used an online converter in order to convert the Parquet file to a CSV for easier analysis in Tableau later on.
 
 ```{r}
-write.csv(new_df, file =
-          "clean_nsduh_data.csv",
-          row.names = FALSE)
+write_parquet(new_df, "clean_nsduh_data.parquet")
 ```
 
 ### **Descriptive Statistics**
