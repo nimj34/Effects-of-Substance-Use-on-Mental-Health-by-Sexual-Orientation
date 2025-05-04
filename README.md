@@ -2,11 +2,13 @@
 
 # 👀 See the project [HERE](https://nimj34.github.io/Effects-of-Mental-Health-on-Substance-Use/)
 
+## TABLEAU DASHBOARD IN PROGRESS
+
 The original data used in this project can be found in the "original_nsduh_data" folder and is labelled "NSDUH_2023.sav".
 The cleaned data containing only the relevant variables is in the file labelled "clean_nsduh_data".
 
 ## 📊 Skills Showcased
-R, Data Analysis, Data Visualization, Descriptive Statistics, Binary Logistic Regression, Plot Diagnostics, Literature Review, Tableau
+R, Data Analysis, Data Visualization, Descriptive Statistics, Binary Logistic Regression, Plot Diagnostics, Literature Review, Predictive Probabilities
 
 ## 🤷 Research Question
 How does mental health influence substance use in lesbian, gay and bisexual (LGB) individuals compared to their non-LGB counterparts?
@@ -14,15 +16,14 @@ How does mental health influence substance use in lesbian, gay and bisexual (LGB
 NOTE: Since there are no questions asking about if respondents are transgender, we will only be focusing on LGB rather than LGBT. Future research should take the transgender population into account.
 
 ## 🔎 Hypotheses
-1. LGB individuals who have experienced psychological distress in the past month are more likely to engage in regular substance use (alcohol, cigarette, and marijuana) compared to non-LGB individuals.
-2. LGB individuals who report experiencing a past year major depressive episode will be more likely to engage in regular substance use (alcohol, cigarette, and marijuana) compared to non-LGB individuals.
-3. LGB individuals who have experienced serious psychological distress in the past month will be more likely to have a higher frequency of binge drinking in the past month compared to non-LGB individuals.
-4. LGB individuals who have had suicidal thoughts, plans, or attempts in the past year will be more likely to have a substance use disorder compared to non-LGB individuals.
+1. LGB individuals who engage in regular substance use (alcohol and marijuana) in the past month are more likely to have experienced psychological distress in the past month compared to non-LGB individuals.
+2. LGB individuals who engage in regular substance use (alcohol, cigarette, and marijuana) are more likely to report experiencing a past year major depressive episode compared to non-LGB individuals.
+3. LGB individuals who have had a substance use disorder in the past year are more likely to have experienced suicidal thoughts, plans, and/or attempts in the past year compared to non-LGB individuals.
 
 ## 📉 Key Findings
 The hypotheses surrounding the relationship between substance use (alcohol, cigarettes, and marijuana) and mental health outcomes for LGB individuals were not supported likely due to the fact that LGB individuals only made up around 14.4% of the sample. 
 
-Individuals who have experienced a major depressive episode in the past year are nearly 8 times more likely to have experienced severe psychological distress in the past monht. 
+Individuals who have experienced a major depressive episode in the past year are nearly 8 times more likely to have experienced severe psychological distress in the past month. 
 
 Those with suicidal plans, thoughts, or attempts are 5.5 times more likely to experience psychological distress.
 
@@ -33,7 +34,7 @@ People with more frequent cigarette and marijuana use are more likely to experie
 ## 📖 Variables
 The data found in this project is from the [2023 National Survey on Drug Use and Health](https://www.samhsa.gov/data/data-we-collect/nsduh-national-survey-drug-use-and-health/national-releases/2023). This survey measures substance use, mental illness, and treatment in the civilian non-institutionalized population aged 12 or older. For the purposes of this project, however, I will only be focusing on adults. 
 
-The final dataset after cleaning and merging both waves had 40,389 rows and 22 columns.
+The final dataset after cleaning and merging both waves had 40,389 rows and 28 columns.
 
 ### 1. **SEX_ORIENT**- sexual orientation of respondent
 Values:
@@ -115,3 +116,14 @@ Values:
 * 0 = No
 * 1 = Yes
 
+### 14. **ALCFREQ**- non-frequent (drank less than or equal to 4 days in past month) vs frequent (drank more than 4 days in past month) drinkers
+Values:
+
+* 0 = Non-Frequent Drinker
+* 1 = Frequent Drinker
+
+### 15. **MJFREQ**- non-frequent (used marijuana less than or equal to 4 days in past month) vs frequent (used marijuana more than 4 days in past month) marijuana user
+Values:
+
+* 0 = Non-Frequent Marijuana User
+* 1 = Frequent Marijuana User
