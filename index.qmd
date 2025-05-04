@@ -17,7 +17,7 @@ Among people 12 or older in 2020, 10.2% had an alcohol use disorder, 6.6% had at
 
 ## **Research Question**
 
-My main research question for this project is “How does mental health influence substance use in lesbian, gay and bisexual (LGB) individuals compared to their non-LGB counterparts?” Since there is no question asking about if respondents are transgender, we will only be focusing on LGB rather than LGBT.
+My main research question for this project is “How does substance use influence mental health outcomes in lesbian, gay and bisexual (LGB) individuals compared to their non-LGB counterparts?” Since there is no question asking about if respondents are transgender, we will only be focusing on LGB rather than LGBT.
 
 Studies have shown that LGB individuals are more likely to experience depression, anxiety, psychological distress, and suicidality. This research question seeks to understand how these mental health issues might influence behaviors like substance use, which are often used as coping mechanisms. Substance use, including alcohol, tobacco, and drugs, can be both a result of mental health struggles and a contributor to further mental health decline.
 
