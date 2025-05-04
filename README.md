@@ -11,7 +11,7 @@ The cleaned data containing only the relevant variables is in the file labelled 
 R, Data Analysis, Data Visualization, Descriptive Statistics, Binary Logistic Regression, Plot Diagnostics, Literature Review, Predictive Probabilities
 
 ## 🤷 Research Question
-How does mental health influence substance use in lesbian, gay and bisexual (LGB) individuals compared to their non-LGB counterparts?
+How does substance use influence mental healht outcomes in lesbian, gay and bisexual (LGB) individuals compared to their non-LGB counterparts?
 
 NOTE: Since there are no questions asking about if respondents are transgender, we will only be focusing on LGB rather than LGBT. Future research should take the transgender population into account.
 
