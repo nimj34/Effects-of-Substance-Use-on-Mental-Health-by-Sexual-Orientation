@@ -1,5 +1,5 @@
 ---
-title: "Effects of Mental Health on Substance Use"
+title: "Effects of Substance Use on Mental Health by Sexual Orientation"
 author: "Nikita Johnson"
 format: 
   html:
@@ -25,7 +25,7 @@ Understanding how mental health influences substance use specifically in LGB ind
 
 ## **Hypotheses**
 
-1\. LGB individuals who have experienced psychological distress in the past month are more likely to engage in regular substance use (alcohol, cigarette, and marijuana) compared to non-LGB individuals.
+1\. LGB individuals who engage in regular substance use (alcohol, cigarettes, and marijuana) in the past month are more likely to have experienced psychological distress in the past month compared to non-LGB individuals.
 
 ```{r}
 #| message: false
@@ -44,6 +44,15 @@ library(expss)
 library(pscl)
 library(pROC)
 library(arrow)
+library(scales)
+library(stargazer)
+library(vtable)
+library(janitor)
+library(flextable)
+library(forcats)
+library(modelbased)
+library(marginaleffects)
+library(see)
 ```
 
 ```{r, fig.alt = "Directed acyclic graph showing the relationship between the independent variable- psychological distress and the dependent variable- regular substance use. This relationship is hypothesized to be moderated by sexual orientaton."}
@@ -74,7 +83,7 @@ plot(dag1)
 
 This hypothesis aims to explore the relationship between psychological distress in the past month (IV) and regular substance use in the past month (DV), which is hypothesized to be moderated by sexual orientation. Potential confounding variables that will need to be controlled for during regression are whether or not the respondent has experienced a major depressive episode in the past year, whether or not the respondent has had suicidal thoughts, plans, or attempts in the past year, as well as sex and age.
 
-2\. LGB individuals who report experiencing a past year major depressive episode will be more likely to engage in regular substance use (alcohol, cigarette, and marijuana) compared to non-LGB individuals.
+2\. LGB individuals who engage in regular substance use (alcohol, cigarette, and marijuana) are more likely to report experiencing a past year major depressive episode compared to non-LGB individuals.
 
 ```{r, fig.alt = "Directed acyclic graph showing the relationship between the independent variable- major depressive episode and the dependent variable- regular substance use. This relationship is hypothesized to be moderated by sexual orientaton."}
 dag2 <- dagitty(
@@ -104,41 +113,7 @@ plot(dag2)
 
 This hypothesis aims to explore the relationship between experiencing a major depressive episode in the past year (IV) and regular substance use in the past month (DV), which is hypothesized to be moderated by sexual orientation. Potential confounding variables that will need to be controlled for during regression are whether or not the respondent has experienced psychological distress in the past month, whether or not the respondent has had suicidal thoughts, plans, or attempts in the past year, as well as sex and age.
 
-3\. LGB individuals who have experienced serious psychological distress in the past month will be more likely to have a higher frequency of binge drinking in the past month compared to non-LGB individuals.
-
-```{r, fig.alt = "Directed acyclic graph showing the relationship between the independent variable- psychological distress and the dependent variable- regular binge drinking. This relationship is hypothesized to be moderated by sexual orientaton."}
-dag3 <- dagitty(
-  'dag {
-"Major Depressive Episode" [pos="-0.501,-1.065"]
-"Psychological Distress (IV)" [exposure,pos="-1.475,0.334"]
-"Regular Binge Drinking (DV)" [outcome,pos="0.364,0.334"]
-"Sexual Orientation (Moderator)" [pos="-0.508,0.004"]
-Age [pos="-0.508,1.236"]
-Sex [pos="-0.510,0.714"]
-Suicidality [pos="-0.506,-0.481"]
-"Major Depressive Episode" -> "Psychological Distress (IV)"
-"Major Depressive Episode" -> "Regular Binge Drinking (DV)"
-"Psychological Distress (IV)" -> "Regular Binge Drinking (DV)"
-"Sexual Orientation (Moderator)" -> "Psychological Distress (IV)"
-"Sexual Orientation (Moderator)" -> "Regular Binge Drinking (DV)"
-Age -> "Psychological Distress (IV)"
-Age -> "Regular Binge Drinking (DV)"
-Sex -> "Psychological Distress (IV)"
-Sex -> "Regular Binge Drinking (DV)"
-Suicidality -> "Psychological Distress (IV)"
-Suicidality -> "Regular Binge Drinking (DV)"
-}
-'
-)
-
-plot(dag3)
-
-
-```
-
-This hypothesis aims to explore the relationship between experiencing psychological distress in the past month (IV) and regular binge drinking in the past month (DV), which is hypothesized to be moderated by sexual orientation. Potential confounding variables that will need to be controlled for during regression are whether or not the respondent has experienced a major depressive episode in the past year, whether or not the respondent has had suicidal thoughts, plans, or attempts in the past year, as well as sex and age.
-
-4\. LGB individuals who have had suicidal thoughts, plans, or attempts in the past year will be more likely to have a substance use disorder compared to non-LGB individuals.
+3.  LGB individuals who have had a substance use disorder in the past year are more likely to have experienced suicidal thoughts, plans, and/or attempts in the past year compared to non-LGB individuals.
 
 ```{r, fig.alt = "Directed acyclic graph showing the relationship between the independent variable- suicidality and the dependent variable- substance use disorder. This relationship is hypothesized to be moderated by sexual orientaton."}
 dag4 <- dagitty(
@@ -172,7 +147,7 @@ plot(dag4)
 
 This hypothesis aims to explore the relationship between experiencing suicidal thoughts, plans, or attempts in the past year (IV) and having a substance use disorder in the past year (DV), which is hypothesized to be moderated by sexual orientation. Potential confounding variables that will need to be controlled for during regression are whether or not the respondent has experienced a major depressive episode in the past year, whether or not the respondent has experienced psychological distress in the past month, as well as sex and age.
 
-These hypotheses seem to be supported by previous literature in that people who have the poorest health outcomes tend to engage in regular substance use, binge drink more frequently, or have a substance use disorder. This project aims to expand on previous literature in the field by adding sexual orientation as a new lens to view these relationships with.
+These hypotheses seem to be supported by previous literature in that people who have the poorest health outcomes tend to engage in regular substance use or have a substance use disorder. This project aims to expand on previous literature in the field by adding sexual orientation as a new lens to view these relationships with.
 
 ## **Data Cleaning and Descriptive Statistics**
 
@@ -199,20 +174,16 @@ Next, we will remove any observations from children since we want to focus on ad
 #responses with 6, 85, 94, 97, ad 98 will be removed
 new_df <- subset(df, !(sex_orient %in% c(6, 85, 94, 97, 98)))
 
-sex_orient_freq_table <- new_df %>%   
+new_df %>%   
   group_by(sex_orient) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))  
-
-sex_orient_freq_table
 ```
 
 ```{r}
 #sex
-sex_freq_table <- df %>%   
+df %>%   
   group_by(sex) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))  
-
-sex_freq_table
 ```
 
 ```{r}
@@ -220,11 +191,9 @@ sex_freq_table
 #responses with 1 will be removed to remove minors from dataset
 new_df <- subset(df, age != 1)
 
-age_freq_table <- new_df %>%   
+new_df %>%   
   group_by(age) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))  
-
-age_freq_table
 ```
 
 ```{r}
@@ -236,11 +205,9 @@ new_df <- subset(new_df, !(cig30use %in% c(94, 97, 98)))
 new_df$cig30use[new_df$cig30use == 91] <- 0
 new_df$cig30use[new_df$cig30use == 93] <- 0
 
-cig30use_freq_table <- new_df %>%   
+new_df %>%   
   group_by(cig30use) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))
-
-cig30use_freq_table
 ```
 
 ```{r}
@@ -252,11 +219,9 @@ new_df <- new_df %>%
 #responses with 9 will be changed to 0
 new_df$nicdepend[new_df$nicdepend == 9] <- 0
 
-nicdepend_freq_table <- new_df %>%   
+new_df %>%   
   group_by(nicdepend) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))
-
-nicdepend_freq_table
 ```
 
 ```{r}
@@ -268,11 +233,9 @@ new_df <- subset(new_df, !(alc30use %in% c(85, 94, 97, 98)))
 new_df$alc30use[new_df$alc30use == 91] <- 0
 new_df$alc30use[new_df$alc30use == 93] <- 0
 
-alc30use_freq_table <- new_df %>%   
+new_df %>%   
   group_by(alc30use) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))
-
-alc30use_freq_table
 ```
 
 ```{r}
@@ -285,11 +248,9 @@ new_df$alcbinge30[new_df$alcbinge30 == 80] <- 0
 new_df$alcbinge30[new_df$alcbinge30 == 91] <- 0
 new_df$alcbinge30[new_df$alcbinge30 == 93] <- 0
 
-alcbinge30_freq_table <- new_df %>%   
+new_df %>%   
   group_by(alcbinge30) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))
-
-alcbinge30_freq_table
 ```
 
 ```{r}
@@ -301,38 +262,30 @@ new_df <- subset(new_df, !(mj30use %in% c(94, 97, 98)))
 new_df$mj30use[new_df$mj30use == 91] <- 0
 new_df$mj30use[new_df$mj30use == 93] <- 0
 
-mj30use_freq_table <- new_df %>%   
+new_df %>%   
   group_by(mj30use) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))
-
-mj30use_freq_table
 ```
 
 ```{r}
 #alcdisorder_year
-alcdisorder_year_freq_table <- new_df %>%   
+new_df %>%   
   group_by(alcdisorder_year) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))
-
-alcdisorder_year_freq_table
 ```
 
 ```{r}
 #mjdisorder_year
-mjdisorder_year_freq_table <- new_df %>%   
+new_df %>%   
   group_by(mjdisorder_year) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))
-
-mjdisorder_year_freq_table
 ```
 
 ```{r}
 #psych_distress_30
-psych_distress_30_freq_table <- new_df %>%   
+new_df %>%   
   group_by(psych_distress_30) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))
-
-psych_distress_30_freq_table
 ```
 
 ```{r}
@@ -340,11 +293,9 @@ psych_distress_30_freq_table
 #responses with 2 will be changed to 0
 new_df$suicide[new_df$suicide == 2] <- 0
 
-suicide_freq_table <- new_df %>%   
+new_df %>%   
   group_by(suicide) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))
-
-suicide_freq_table
 ```
 
 ```{r}
@@ -356,11 +307,9 @@ new_df$majordepressive_year[new_df$majordepressive_year == 2] <- 0
 new_df <- new_df %>%
   drop_na(majordepressive_year)
 
-majordepressive_year_freq_table <- new_df %>%   
+new_df %>%   
   group_by(majordepressive_year) %>%   
   summarise(frequency = n()) %>%   arrange(desc(frequency))
-
-majordepressive_year_freq_table
 ```
 
 Next, I will create new columns with the values of categorical variables for easier plotting later on.
@@ -393,6 +342,15 @@ new_df <- na.omit(new_df)
 ```
 
 ```{r}
+#sex_orient4
+#if sex_orient3 = 0 ~ non-LGB
+#if sex_orient3 = 1 ~ LGB
+new_df <- new_df %>%
+  mutate(sex_orient4 = case_when(sex_orient3 == 0 ~ "Non-LGB",
+                                 sex_orient3 == 1 ~ "LGB"))
+```
+
+```{r}
 #sex2
 new_df <- new_df %>% 
   mutate(sex2 = case_when(sex == 1 ~ "Female",
@@ -414,6 +372,34 @@ new_df <- new_df %>%
 new_df <- new_df %>% 
   mutate(nicdepend2 = case_when(nicdepend == 0 ~ "No",
                                 nicdepend == 1 ~ "Yes"))
+```
+
+```{r}
+#alcfreq
+new_df <- new_df %>%
+  mutate(alcfreq = case_when(alc30use <= 4 ~ '0',
+                             alc30use > 4 ~ '1'))
+```
+
+```{r}
+#alcfreq2
+new_df <- new_df %>%
+mutate(alcfreq2 = case_when(alcfreq == 0 ~ "Non-Frequent Drinker",
+                            alcfreq == 1 ~ "Frequent Drinker"))
+```
+
+```{r}
+#mjfreq
+new_df <- new_df %>%
+  mutate(mjfreq = case_when(mj30use <= 4 ~ '0',
+                            mj30use > 4 ~ '1'))
+```
+
+```{r}
+#mjfreq2
+new_df <- new_df %>%
+  mutate(mjfreq2 = case_when(mjfreq == 0 ~ 'Non-Frequent Marijuana User',
+                             mjfreq == 1 ~ 'Frequent Marijuana User'))
 ```
 
 ```{r}
@@ -473,6 +459,11 @@ new_df = apply_labels(new_df,
                       sex_orient3 = "Sexual Orientation")
 ```
 
+```{r}
+#remove df
+rm(df)
+```
+
 #### **Saving Cleaned Data as Parquet File**
 
 There were some issues when I tried saving this dataframe as a CSV, so instead I saved it as a Parquet file. After doing so, I used an online converter in order to convert the Parquet file to a CSV for easier analysis in Tableau later on.
@@ -489,7 +480,35 @@ In this section, I will go over all of the variables of interest relating to thi
 dim(new_df)
 ```
 
-After being cleaned and processed, the new data frame has 22 columns and 40,389 rows.
+After being cleaned and processed, the new data frame has 28 columns and 40,389 rows.
+
+#### Summary Statistics
+
+```{r, results = "asis"}
+tab_df <- new_df %>%
+  select(sex_orient2, cig30use, alc30use, alcbinge30, mj30use)
+
+stargazer(as.data.frame(tab_df), type = "html", 
+          digits = 2,
+          header = FALSE,
+          keep = c("cig30use", "alc30use", "alcbinge30", "mj30use"),
+          covariate.labels = c("# Days Smoked Cigarettes Past Month",
+                               "# Days Drank Alcohol Past Month", 
+                               "# Days Binged Alcohol Past Month", 
+                               "# Days Used Marijuana Past Month"))
+```
+
+#### Summary Statistics by Sexual Orientation
+
+```{r}
+names(tab_df)[names(tab_df) == "sex_orient2"] <- "Sexual_Orientation"
+
+labs <- c("# Days Smoked Cigarettes Past Month", "# Days Drank Alcohol Past Month", "# Days Binged Alcohol Past Month", "# Days Used Marijuana Past Month")
+
+st(tab_df, group = 'Sexual_Orientation', group.long = TRUE, labels = labs, out = "kable", title = "Summary Statistics by Sexual Orientation")
+```
+
+#### Description of Variables
 
 1.  **sex_orient**- sexual orientation of respondent-
 
@@ -506,41 +525,49 @@ After being cleaned and processed, the new data frame has 22 columns and 40,389 
         -   5 = Questioning
 
 ```{r}
-sex_orient_freq_table <- new_df %>%   
-  group_by(sex_orient2) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency)) 
+sexorient_tab <- new_df %>%  
+  tabyl(sex_orient2) %>% 
+  filter(n != 0) %>% 
+  mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  rename(Response = sex_orient2,
+         Count = n,
+         Percent = percent)
 
-sex_orient_freq_table
-```
-
-```{r}
-#heterosexual
-34587/40389
-
-#bisexual
-3020/40389
-
-#gay/lesbian
-1212/40389
-
-#other
-846/40389
-
-#questioning
-724/40389
+sexorient<-flextable(sexorient_tab)
+sexorient
 ```
 
 ```{r, fig.alt = "A bar plot with sexual orientation (consisting of heterosexual, bisexual, gay/lesbian, other, and questioning) on the x-axis and count on the y-axis. Plot illustrates the distribution of the data in terms of sexual orientation."}
-ggplot(new_df, aes(x = fct_infreq(sex_orient2))) +
-  geom_bar(fill = "#0073C2FF") +
-  labs(title = "Sexual Orientation") +
-  xlab("Sexual Orientation") +
-  ylab("Count") +
+
+sexorient_count <- new_df %>%
+  dplyr::count(sex_orient2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100) 
+
+sexorient_count %>%
+  ggplot(aes(x = sex_orient2, 
+             y = n,
+             fill = sex_orient2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Heterosexual" = "darkgray", 
+                               "Bisexual" = "darkorchid",
+                               "Gay/Lesbian" = "deeppink3",
+                               "Other" = "chartreuse3",
+                               "Questioning" = "deepskyblue3")) +
+  geom_text(aes(x = sex_orient2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
   theme_minimal() +
-  theme(plot.title = element_text(hjust=0.5))
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Sexual Orientation of Respondents",
+      x = "Sexual Orientation",
+      y = "Count")
 ```
 
-The most common sexual orientation among respondents was heterosexual (85.6%) followed by bisexual (7.5%) and gay/lesbian (3%).
+The most common sexual orientation among respondents was heterosexual (85.6%) followed by bisexual (7.5%) and gay/lesbian (3%). The lack of LGB respondents in this project is a severe limitation.
 
 2.  **sex**- sex at birth of respondent -
 
@@ -551,29 +578,42 @@ The most common sexual orientation among respondents was heterosexual (85.6%) fo
         -   2 = Male
 
 ```{r}
-new_sex_freq_table <- new_df %>%   
-  group_by(sex2) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency)) 
+sex_tab <- new_df %>%  
+  tabyl(sex2) %>% 
+  filter(n != 0) %>% 
+  mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  rename(Response = sex2,
+         Count = n,
+         Percent = percent)
 
-new_sex_freq_table
-```
-
-```{r}
-#male
-22223/40389
-
-#female
-18166/40389
+sex<-flextable(sex_tab)
+sex
 ```
 
 ```{r, fig.alt= "A bar plot with sex (as either male or female) on the  x-axis and count on the y-axis. Plot illustrates the distribution of the data in terms of sex."}
-ggplot(new_df, aes(x = fct_infreq(sex2))) +
-  geom_bar(fill = "#0073C2FF") +
-  labs(title = "Sex at Birth") +
-  xlab("Sex") +
-  ylab("Count") +
+sex_count <- new_df %>%
+  dplyr::count(sex2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+sex_count %>%
+  ggplot(aes(x = sex2, 
+             y = n,
+             fill = sex2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Female" = "deeppink", 
+                               "Male" = "deepskyblue")) +
+  geom_text(aes(x = sex2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
   theme_minimal() +
-  theme(plot.title = element_text(hjust=0.5))
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Sex at Birth",
+      x = "Sex",
+      y = "Count")
 ```
 
 55% of respondents were born male, while 45% of respondents were born female.
@@ -593,38 +633,45 @@ ggplot(new_df, aes(x = fct_infreq(sex2))) +
         -   6 = 65 or older
 
 ```{r}
-age_freq_table <- new_df %>%   
-  group_by(age2) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency))  
+age_tab <- new_df %>%  
+  tabyl(age2) %>% 
+  filter(n != 0) %>% 
+  mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  rename(Response = age2,
+         Count = n,
+         Percent = percent)
 
-age_freq_table
-```
-
-```{r}
-#18-25
-11980/40389
-
-#35-49
-11135/40389
-
-#26-34
-8234/40389
-
-#65+
-4571/40389
-
-#50-64
-4469/40389
+age<-flextable(age_tab)
+age
 ```
 
 ```{r, fig.alt= "A bar plot with age category (in years) on the x-axis and count on the y-axis. Plot illustrates the distribution of the data in terms of age group."}
-ggplot(new_df, aes(x = fct_infreq(age2))) +
-  geom_bar(fill = "#0073C2FF") +
-  labs(title = "Age Category") +
-  xlab("Age Category") +
-  ylab("Count") +
+age_count <- new_df %>%
+  dplyr::count(age2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+age_count %>%
+  ggplot(aes(x = age2, 
+             y = n,
+             fill = age2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("18-25" = "#BBFFBB", 
+                               "26-34" = "#86FF86",
+                               "35-49" = "#50FF50",
+                               "50-64" = "#00F100",
+                               "65+" = "#00BB00")) +
+  geom_text(aes(x = age2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
   theme_minimal() +
-  theme(plot.title = element_text(hjust=0.5)) 
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Age Category",
+      x = "Age",
+      y = "Count")
 ```
 
 The majority of respondents fell into the 18-25 (29.7%) and 35-49 (27.6%) age categories. People who were 26-34 made up 20.4% of the data. The least represented age groups in this data frame are from the 50-64 and 65+ age groups, making up 11.1% and 11.3% respectively.
@@ -635,30 +682,18 @@ The majority of respondents fell into the 18-25 (29.7%) and 35-49 (27.6%) age ca
 
         -   0-30
 
-```{r}
-new_df$cig30use %>%
-  summary()
-```
-
-```{r}
-cig30use_freq_table <- new_df %>%   
-  group_by(cig30use) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency))  
-
-cig30use_freq_table
-```
-
-```{r}
-34679/40389
-
-3104/40389
-```
-
 ```{r, fig.alt= "A histogram with the number of days respondents smoked cigarettes in the past month on the x-axis and frequency on the y-axis. Plot illustrates the distribution of the data in terms of frequency of smoking cigarettes."}
-hist(new_df$cig30use, xlab = "# of Days", main = "# of Days Respondent Smoked Cigarettes in Past Month", col = "#0073C2FF")
+ggplot(new_df, aes(x = cig30use)) +
+  geom_histogram(color = "#000000", fill = "#0099F8") +
+  xlab("# Days Respondent Smoked Cigarettes in Past Month") +
+  ylab("Count") +
+  labs(title = "Frequency of Cigarette Use in Past Month") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
 ```
 
-The mean number of days respondents smoked cigarettes in the past month was 2.9. The majority of respondents said they had not smoked any cigarettes in the past month (85.9%), while the second most common response was 30 days (7.7%).
+The mean number of days respondents smoked cigarettes in the past month was 2.9. The majority of respondents said they had not smoked any cigarettes in the past month, while the second most common response was 30 days.
 
 5.  **nicdepend**- nicotine dependence in past month based on criteria according to the Nicotine Dependence Syndrome Scale and the Fagerstrom Test of Nicotine Dependence -
 
@@ -669,29 +704,42 @@ The mean number of days respondents smoked cigarettes in the past month was 2.9.
         -   1 = Yes
 
 ```{r}
-nicdepend_freq_table <- new_df %>%   
-  group_by(nicdepend2) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency)) 
+nicdepend_tab <- new_df %>%  
+  tabyl(nicdepend2) %>% 
+  filter(n != 0) %>% 
+  mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  rename(Response = nicdepend2,
+         Count = n,
+         Percent = percent)
 
-nicdepend_freq_table
-```
-
-```{r}
-#no
-37177/40389
-
-#yes
-3212/40389
+nicdepend<-flextable(nicdepend_tab)
+nicdepend
 ```
 
 ```{r, fig.alt = "A bar plot with nicotine dependence on the x-axis (measured as yes/no) and count on the y-axis. Plot illustrates the distribution of the data in terms of whether or not respondents have a dependence on nicotine."}
-ggplot(new_df, aes(x = nicdepend2)) +
-  geom_bar(fill = "#0073C2FF") +
-  labs(title = "Nicotine Dependence") +
-  xlab("Nicotine Dependence") +
-  ylab("Count") +
+nicdepend_count <- new_df %>%
+  dplyr::count(nicdepend2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+nicdepend_count %>%
+  ggplot(aes(x = nicdepend2, 
+             y = n,
+             fill = nicdepend2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Yes" = "red", 
+                               "No" = "green")) +
+  geom_text(aes(x = nicdepend2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
   theme_minimal() +
-  theme(plot.title = element_text(hjust=0.5))
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Nicotine Dependence in Past Year",
+      x = "Nicotine Dependence",
+      y = "Count")
 ```
 
 92% of respondents were not classified as having a dependence on nicotine, compared to 8% of respondents who were classified as having a dependence on nicotine.
@@ -702,251 +750,384 @@ ggplot(new_df, aes(x = nicdepend2)) +
 
         -   0-30
 
-```{r}
-new_df$alc30use %>%
-  summary()
-```
-
-```{r}
-alc30use_freq_table <- new_df %>%   
-  group_by(alc30use) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency))  
-
-alc30use_freq_table
-```
-
-```{r}
-18851/40389
-```
-
 ```{r, fig.alt= "A histogram with the number of days respondents had at least one drink of alcohol in the past month on the x-axis and frequency on the y-axis. Plot illustrates the distribution of the data in terms of frequency of drinking at least one drink in the past month."}
-hist(new_df$alc30use, xlab = "# of Days", main = "# of Days Respondent Had 1+ Drink of Alcohol", col = "#0073C2FF")
+
+ggplot(new_df, aes(x = alc30use)) +
+  geom_histogram(color = "#000000", fill = "#0099F8") +
+  xlab("# Days Respondent Drank Alcohol in Past Month") +
+  ylab("Count") +
+  labs(title = "Frequency of Alcohol Use in Past Month") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
-The mean number of days respondents had at least one in the past month was 4.1. The most frequent response was that respondents had not had any drinks in the past month (46.7%).
+The mean number of days respondents had at least one in the past month was 4.1. The most frequent response was that respondents had not had any drinks in the past month.
 
-7.  **alcbinge30**- number of days respondent had 4 or more drinks in the past 30 days -
+7.  **alcfreq-** non-frequent (drank less than or equal to 4 days in past month) vs frequent (drank more than 4 days in past month) drinkers
+    -   Values
+        -   0 = Non-Frequent Drinker
+        -   1 = Frequent Drinker
+
+```{r}
+alcfreq_tab <- new_df %>%  
+  tabyl(alcfreq2) %>% 
+  filter(n != 0) %>% 
+  mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  rename(Response = alcfreq2,
+         Count = n,
+         Percent = percent)
+
+alcfreq<-flextable(alcfreq_tab)
+alcfreq
+```
+
+```{r, fig.alt = "A bar plot with frequency of drinking on the x-axis (measured as frequent drinker or non-frequent drinker) and count on the y-axis. Plot illustrates the distribution of the data in terms of whether or not respondents are frequent drinkers."}
+alcfreq_count <- new_df %>%
+  dplyr::count(alcfreq2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+alcfreq_count %>%
+  ggplot(aes(x = alcfreq2, 
+             y = n,
+             fill = alcfreq2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Frequent Drinker" = "red", 
+                               "Non-Frequent Drinker" = "green")) +
+  geom_text(aes(x = alcfreq2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Frequency of Drinking in Past Month",
+      x = "Frequency of Drinking",
+      y = "Count")
+```
+
+73.3% of respondents drank less than 4 drinks in the past month and would be considered non-frequent drinkers, while 26.7% drank 4 or more drinks in the past month and would be considered frequent drinkers.
+
+8.  **alcbinge30**- number of days respondent had 4 or more drinks in the past 30 days -
 
     -   Values
 
         -   0-30
 
-```{r}
-new_df$alcbinge30 %>%
-  summary()
-```
-
-```{r}
-alcbinge30_freq_table <- new_df %>%   
-  group_by(alcbinge30) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency)) 
-
-alcbinge30_freq_table
-```
-
-```{r}
-29965/40389
-```
-
 ```{r, fig.alt= "A histogram with the number of days respondents had at least four drinks of alcohol in the past month on the x-axis and frequency on the y-axis. Plot illustrates the distribution of the data in terms of frequency of binge drinking in the past month."}
-hist(new_df$alcbinge30, xlab = "# of Days", main = "Number of Days With 4+ Drinks", col = "#0073C2FF")
+
+ggplot(new_df, aes(x = alcbinge30)) +
+  geom_histogram(color = "#000000", fill = "#0099F8") +
+  xlab("# Days Respondent Binged Alcohol in Past Month") +
+  ylab("Count") +
+  labs(title = "Frequency of Alcohol Binges (4+ Drinks) in Past Month") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
-The mean number of days a respondent had 4 or more drinks in the past 30 days was 1.1. The most frequent response from respondents was that they had never drank 4 or more drinks in the past month at 74.2%.
+The mean number of days a respondent had 4 or more drinks in the past 30 days was 1.1. The most frequent response from respondents was that they had not binge drank in the past month.
 
-8.  **mj30use**- number of days respondent used marijuana/cannabis in any form in the past 30 days - Values
+9.  **mj30use**- number of days respondent used marijuana/cannabis in any form in the past 30 days - Values
 
     -   0-30
 
-```{r}
-new_df$mj30use %>%
-  summary()
-```
-
-```{r}
-mj30use_freq_table <- new_df %>%   
-  group_by(mj30use) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency)) 
-
-mj30use_freq_table
-```
-
-```{r}
-32344/40389
-```
-
 ```{r, fig.alt= "A histogram with the number of days respondents used marijuana in the past month on the x-axis and frequency on the y-axis. Plot illustrates the distribution of the data in terms of frequency of marijuana use."}
-hist(new_df$mj30use, xlab = "# of Days", main = "Number of Days Used Marijuana", col = "#0073C2FF")
+
+ggplot(new_df, aes(x = mj30use)) +
+  geom_histogram(color = "#000000", fill = "#0099F8") +
+  xlab("# Days Respondent Used Marijuana in Past Month") +
+  ylab("Count") +
+  labs(title = "Frequency of Marijuana Use in Past Month") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
-The mean number of days a respondent used marijuana in the past 30 days was around 3.3. The most frequent response from respondents was that they had never used marijuana in the past month at 80.1%.
+The mean number of days a respondent used marijuana in the past 30 days was around 3.3. The most frequent response from respondents was that they had never used marijuana in the past month.
 
-9.  **alcdisorder_year**- whether respondents fits DSM-5 criteria for alcohol use disorder - Values
+10. **mjfreq**- non-frequent (used marijuana less than or equal to 4 days in past month) vs frequent (used marijuana more than 4 days in past month) marijuana user
+    -   Values
+        -   0 = Non-Frequent Marijuana User
+        -   1 = Frequent Marijuana User
+
+```{r}
+mjfreq_tab <- new_df %>%  
+  tabyl(mjfreq2) %>% 
+  filter(n != 0) %>% 
+  mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  rename(Response = mjfreq2,
+         Count = n,
+         Percent = percent)
+
+mjfreq<-flextable(mjfreq_tab)
+mjfreq
+```
+
+```{r, fig.alt = "A bar plot with frequency of marijuana use on the x-axis (measured as frequent marijuana user or non-frequent marijuana user) and count on the y-axis. Plot illustrates the distribution of the data in terms of whether or not respondents are frequent marijuana users"}
+mjfreq_count <- new_df %>%
+  dplyr::count(mjfreq2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+mjfreq_count %>%
+  ggplot(aes(x = mjfreq2, 
+             y = n,
+             fill = mjfreq2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Frequent Marijuana User" = "red", 
+                               "Non-Frequent Marijuana User" = "green")) +
+  geom_text(aes(x = mjfreq2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Frequency of Marijuana Use in Past Month",
+      x = "Frequency of Marijauna Use",
+      y = "Count")
+
+```
+
+85.6% of respondents used marijuana less than 4 times in the past month and would be considered non-frequent marijuana users, while 14.4% used marijuana 4 or more times in the past month and would be considered frequent marijuana users.
+
+11. **alcdisorder_year**- whether respondents fits DSM-5 criteria for alcohol use disorder - Values
 
     -   0 = No
 
     -   1 = Yes
 
 ```{r}
-alcdisorder_year_freq_table <- new_df %>%   
-  group_by(alcdisorder_year2) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency)) 
+alcdisorder_tab <- new_df %>%  
+  tabyl(alcdisorder_year2) %>% 
+  filter(n != 0) %>% 
+  mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  rename(Response = alcdisorder_year2,
+         Count = n,
+         Percent = percent)
 
-alcdisorder_year_freq_table
-```
-
-```{r}
-#no
-35277/40389
-
-#yes
-5112/40389
+alcdisorder<-flextable(alcdisorder_tab)
+alcdisorder
 ```
 
 ```{r, fig.alt= "A bar plot with alcohol use disorder on the x-axis (measured as yes/no) and count on the y-axis. Plot illustrates the distribution of the data in terms of whether or not respondents meet the criteria for alcohol use disorder."}
-ggplot(new_df, aes(alcdisorder_year2)) +
-  geom_bar(fill = "#0073C2FF") +
-  labs(title = "Alcohol Use Disorder in Past Year") +
-  xlab("Alcohol Use Disorder") +
-  ylab("Count") +
+
+alcdisorder_count <- new_df %>%
+  dplyr::count(alcdisorder_year2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+alcdisorder_count %>%
+  ggplot(aes(x = alcdisorder_year2, 
+             y = n,
+             fill = alcdisorder_year2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Yes" = "red", 
+                               "No" = "green")) +
+  geom_text(aes(x = alcdisorder_year2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
   theme_minimal() +
-  theme(plot.title = element_text(hjust=0.5))
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Alcohol Use Disorder in Past Year",
+      x = "Alcohol Use Disorder",
+      y = "Count")
 ```
 
 87.3% of respondents did not meet the DSM-5 criteria for having alcohol use disorder in the past year. Only 12.7% of respondents did meet the criteria for alcohol use disorder.
 
-10. **mjdisorder_year**- whether respondent fits criteria for marijuana use disorder - Values
+12. **mjdisorder_year**- whether respondent fits criteria for marijuana use disorder - Values
 
     -   0 = No
 
     -   1 = Yes
 
 ```{r}
-mjdisorder_year_freq_table <- new_df %>%   
-  group_by(mjdisorder_year2) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency)) 
+mjdisorder_tab <- new_df %>%  
+  tabyl(mjdisorder_year2) %>% 
+  filter(n != 0) %>% 
+  mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  rename(Response = mjdisorder_year2,
+         Count = n,
+         Percent = percent)
 
-mjdisorder_year_freq_table
-```
-
-```{r}
-#no
-36500/40389
-
-#yes
-3889/40389
+mjdisorder<-flextable(mjdisorder_tab)
+mjdisorder
 ```
 
 ```{r, fig.alt= "A bar plot with marijuana use disorder on the x-axis (measured as yes/no) and count on the y-axis. Plot illustrates the distribution of the data in terms of whether or not respondents meet the criteria for marijuana use disorder."}
-ggplot(new_df, aes(mjdisorder_year2)) +
-  geom_bar(fill = "#0073C2FF") +
-  labs(title = "Marijuana Use Disorder in Past Year") +
-  xlab("Marijuana Use Disorder") +
-  ylab("Count") +
+
+mjdisorder_count <- new_df %>%
+  dplyr::count(mjdisorder_year2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+mjdisorder_count %>%
+  ggplot(aes(x = mjdisorder_year2, 
+             y = n,
+             fill = mjdisorder_year2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Yes" = "red", 
+                               "No" = "green")) +
+  geom_text(aes(x = mjdisorder_year2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
   theme_minimal() +
-  theme(plot.title = element_text(hjust=0.5))
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Marijuana Use Disorder in Past Year",
+      x = "Marijuana Use Disorder",
+      y = "Count")
 ```
 
 90.4% of respondents did not meet the DSM-5 criteria for having marijuana use disorder in the past year. Only 9.6% of respondents did meet the criteria for marijuana use disorder.
 
-11. **psych_distress_30**- past month serious psychological distress indicator (recoded based on answers to K6 questionnaire) - Values
+13. **psych_distress_30**- past month serious psychological distress indicator (recoded based on answers to K6 questionnaire) - Values
 
     -   0 = No
 
     -   1 = Yes
 
 ```{r}
-psych_distress_30_freq_table <- new_df %>%   
-  group_by(psych_distress_30_2) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency))
+psychdistress_tab <- new_df %>%  
+  tabyl(psych_distress_30_2) %>% 
+  filter(n != 0) %>% 
+  mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  rename(Response = psych_distress_30_2,
+         Count = n,
+         Percent = percent)
 
-psych_distress_30_freq_table
-```
-
-```{r}
-#no
-35973/40389
-
-#yes
-4416/40389
+psychdistress<-flextable(psychdistress_tab)
+psychdistress
 ```
 
 ```{r, fig.alt = "A bar plot with serious psychological distress in the past 30 days on the x-axis (measured as yes/no) and count on the y-axis. Plot illustrates the distribution of the data in terms of whether or not respondents experienced serious psychological distress in the past 30 days."}
-ggplot(new_df, aes(psych_distress_30_2)) +
-  geom_bar(fill = "#0073C2FF") +
-  labs(title = "Serious Psychological Distress in Past 30 Days") +
-  xlab("Serious Psychological Distress") +
-  ylab("Count") +
+
+psychdistress_count <- new_df %>%
+  dplyr::count(psych_distress_30_2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+psychdistress_count %>%
+  ggplot(aes(x = psych_distress_30_2, 
+             y = n,
+             fill = psych_distress_30_2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Yes" = "red", 
+                               "No" = "green")) +
+  geom_text(aes(x = psych_distress_30_2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
   theme_minimal() +
-  theme(plot.title = element_text(hjust=0.5))
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Serious Psychological Distress in Past Month",
+      x = "Serious Psychological Distress",
+      y = "Count")
 ```
 
 89.1% of respondents have not experienced serious psychological distress in the past 30 days, while 10.9% have.
 
-12. **suicide**- recoded adult past year thoughts, plans, OR attempts of suicide - Values
+14. **suicide**- recoded adult past year thoughts, plans, OR attempts of suicide - Values
 
     -   0 = No
 
     -   1 = Yes, one or more (thoughts, plans, attempts, or some combination)
 
 ```{r}
-suicide_freq_table <- new_df %>%   
-  group_by(suicide2) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency))
+suicide_tab <- new_df %>%  
+  tabyl(suicide2) %>% 
+  filter(n != 0) %>% 
+  mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  rename(Response = suicide2,
+         Count = n,
+         Percent = percent)
 
-suicide_freq_table
-```
-
-```{r}
-#no
-37388/40389
-
-#yes
-3001/40389
+suicide<-flextable(suicide_tab)
+suicide
 ```
 
 ```{r, fig.alt = "A bar plot with suicidal thoughts, plans, and/or attempts in the past year on the x-axis (measured as yes/no)and count on the y-axis. Plot illustrates the distribution of the data in terms of whether or not respondents experienced at least one of the following- suicidal thoughts, plans, and/or attempts."}
-ggplot(new_df, aes(suicide2)) +
-  geom_bar(fill = "#0073C2FF") +
-  labs(title = "Suicidal Thoughts, Plans, And/Or Attempts in Past Year") +
-  xlab("Suicidal Thoughts, Plans, And/Or Attempts") +
-  ylab("Count") +
+
+suicide_count <- new_df %>%
+  dplyr::count(suicide2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+suicide_count %>%
+  ggplot(aes(x = suicide2, 
+             y = n,
+             fill = suicide2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Yes" = "red", 
+                               "No" = "green")) +
+  geom_text(aes(x = suicide2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
   theme_minimal() +
-  theme(plot.title = element_text(hjust=0.5))
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Suicidal Thoughts, Plans, and/or Attempts in Past Year",
+      x = "Suicidal Thoughts, Plans, and/or Attempts",
+      y = "Count")
 ```
 
 92.6% of respondents did not have suicidal thoughts, plans, and/or attempts in the past 30 days while 7.4% experienced at least one of these.
 
-13. **majordepressive_year**- past year major depressive episode - Values
+15. **majordepressive_year**- past year major depressive episode - Values
 
     -   0 = No
 
     -   1 = Yes
 
 ```{r}
-majordepressive_year_freq_table <- new_df %>%   
-  group_by(majordepressive_year2) %>%   
-  summarise(frequency = n()) %>%   arrange(desc(frequency))
+mde_tab <- new_df %>%  
+  tabyl(majordepressive_year2) %>% 
+  filter(n != 0) %>% 
+  mutate(percent = round(percent * 100, 1), 
+         percent = paste0(percent, "%"))  %>% 
+  rename(Response = majordepressive_year2,
+         Count = n,
+         Percent = percent)
 
-majordepressive_year_freq_table
-```
-
-```{r}
-#no
-35623/40389
-
-#yes
-4766/40389
+mde<-flextable(mde_tab)
+mde
 ```
 
 ```{r, fig.alt = "A bar plot with major depressive episode in the past year on the x-axis (measured as yes/no) and count on the y-axis. Plot illustrates the distribution of the data in terms of whether or not respondents experienced a major depressive episode in the past year."}
-ggplot(new_df, aes(majordepressive_year2)) +
-  geom_bar(fill = "#0073C2FF") +
-  labs(title = "Experienced Major Depressive Episode in Past Year") +
-  xlab("Major Depressive Episode") +
-  ylab("Count") +
+
+mde_count <- new_df %>%
+  dplyr::count(majordepressive_year2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+mde_count %>%
+  ggplot(aes(x = majordepressive_year2, 
+             y = n,
+             fill = majordepressive_year2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Yes" = "red", 
+                               "No" = "green")) +
+  geom_text(aes(x = majordepressive_year2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
   theme_minimal() +
-  theme(plot.title = element_text(hjust=0.5))
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Experienced Major Depressive Episode in Past Year",
+      x = "Major Depressive Episode",
+      y = "Count")
 ```
 
 88.2% of respondents did not experience a major depressive episode in the past year, while 11.8% did experience a major depressive episode.
@@ -958,334 +1139,926 @@ ggplot(new_df, aes(majordepressive_year2)) +
 #### **Sex and Nicotine Dependence**
 
 ```{r, fig.alt = "A bar plot with nicotine dependence (filtering by responses with yes) on the x-axis and count on the y-axis. There are two bars that represent the sex variable (measured as either male or female). Plot illustrates the differences in sex among those with a nicotine dependence."}
-new_df %>%
+
+sex_nicdepend_count <- new_df %>%
   filter(nicdepend2 %in% c("Yes")) %>%
-  ggplot(aes(nicdepend2, fill = sex2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Nicotine Dependence by Sex",
-       x = "Nicotine Dependence",
-       y = "Count",
-       fill = "Sex")
+  dplyr::count(sex2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+sex_nicdepend_count %>%
+  ggplot(aes(x = sex2, 
+             y = n,
+             fill = sex2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Female" = "deeppink", 
+                               "Male" = "deepskyblue")) +
+  geom_text(aes(x = sex2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Nicotine Dependence by Sex",
+      x = "Sex",
+      y = "Count")
 ```
 
-Women were slightly more likely to be dependent on nicotine than men.
+Women make up 50.9% of those dependent on nicotine, while men make up 49.1%.
 
 #### **Age and Nicotine Dependence**
 
 ```{r, fig.alt= "A bar plot with nicotine dependence (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the age variable (measured as 18-25, 26-34, 35-49, 50-64, and 65+ years old). Plot illustrates the differences in age among those with a nicotine dependence."}
-new_df %>%
+
+age_nicdepend_count <- new_df %>%
   filter(nicdepend2 %in% c("Yes")) %>%
-  ggplot(aes(nicdepend2, fill = age2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Nicotine Dependence by Age",
-       x = "Nicotine Dependence",
-       y = "Count",
-       fill = "Age")
+  dplyr::count(age2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+age_nicdepend_count %>%
+  ggplot(aes(x = age2, 
+             y = n,
+             fill = age2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("18-25" = "#BBFFBB", 
+                               "26-34" = "#86FF86",
+                               "35-49" = "#50FF50",
+                               "50-64" = "#00F100",
+                               "65+" = "#00BB00")) +
+  geom_text(aes(x = age2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Nicotine Dependence by Age",
+      x = "Age",
+      y = "Count")
 ```
 
-People aged 35-49 were the most likely age group to have a nicotine dependence.
+People aged 35-49 were the most likely age group to have a nicotine dependence (39.4%), followed by people aged 26-34 (20.8%). The least likely age group to have a nicotine dependence was those 65 years and older (7.1%).
 
 #### **Sexual Orientation and Nicotine Dependence**
 
-```{r, fig.alt = "A bar plot with nicotine dependence (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the sexual orientation variable (measured as heterosexual, bisexual, gay/lesbian, other, and questioning). Plot illustrates the differences in sexual orientation among those with a nicotine dependence."}
-new_df %>%
-  filter(nicdepend2 %in% c("Yes")) %>%
-  ggplot(aes(nicdepend2, fill = sex_orient2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Nicotine Dependence by Sexual Orientation",
-       x = "Nicotine Dependence",
-       y = "Count",
-       fill = "Sexual Orientation")
+##### Nicotine Dependence in Heterosexual People
+
+```{r, fig.alt = "A bar plot with nicotine dependence (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include heterosexual respondents. Plot illustrates the differences in nicotine dependence among heterosexual people."}
+
+heterosexual_nicdepend_count <- new_df %>%
+  filter(sex_orient2 %in% c("Heterosexual")) %>%
+  dplyr::count(nicdepend2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+
+heterosexual_nicdepend_count %>%
+  ggplot(aes(x = nicdepend2, 
+             y = n)) +
+  geom_col(fill = "darkgray") +
+  geom_text(aes(x = nicdepend2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Nicotine Dependence For Heterosexuals",
+      x = "Nicotine Dependence",
+      y = "Count")
 ```
 
-Heterosexual people were the most likely sexual orientation group to have a dependence on nicotine, followed by bisexual people.
+Among heterosexual respondents, only 7.7% had a nicotine dependence in the past year compared to 92.3% that did not.
+
+##### Nicotine Dependence in Bisexual People
+
+```{r, fig.alt = "A bar plot with nicotine dependence (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include bisexual respondents. Plot illustrates the differences in nicotine dependence among bisexual people."}
+
+bisexual_nicdepend_count <- new_df %>%
+  filter(sex_orient2 %in% c("Bisexual")) %>%
+  dplyr::count(nicdepend2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+
+bisexual_nicdepend_count %>%
+  ggplot(aes(x = nicdepend2, 
+             y = n)) +
+  geom_col(fill = "darkorchid") +
+  geom_text(aes(x = nicdepend2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Nicotine Dependence For Bisexuals",
+      x = "Nicotine Dependence",
+      y = "Count")
+```
+
+Among bisexual respondents, only 11.7% had a nicotine dependence in the past year compared to 88.3% that did not.
+
+##### Nicotine Dependence in Gay/Lesbian People
+
+```{r, fig.alt = "A bar plot with nicotine dependence (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include gay/lesbian respondents. Plot illustrates the differences in nicotine dependence among gay/lesbian people"}
+
+lg_nicdepend_count <- new_df %>%
+  filter(sex_orient2 %in% c("Gay/Lesbian")) %>%
+  dplyr::count(nicdepend2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+
+lg_nicdepend_count %>%
+  ggplot(aes(x = nicdepend2, 
+             y = n)) +
+  geom_col(fill = "deeppink3") +
+  geom_text(aes(x = nicdepend2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Nicotine Dependence For Gays/Lesbians",
+      x = "Nicotine Dependence",
+      y = "Count")
+```
+
+Among gay and lesbian respondents, only 9.1% had a nicotine dependence in the past year compared to 90.1% that did not.
 
 ### **Alcohol Use Disorder by Sex, Age, and Sexual Orientation**
 
 #### **Sex and Alcohol Use Disorder**
 
 ```{r, fig.alt = "A bar plot with alcohol use disorder (filtering by responses with yes) on the x-axis and count on the y-axis. There are two bars that represent the sex variable (measured as either male or female). Plot illustrates the differences in sex among those with an alcohol use disorder."}
-new_df %>%
+
+sex_alcdisorder_count <- new_df %>%
   filter(alcdisorder_year2 %in% c("Yes")) %>%
-  ggplot(aes(alcdisorder_year2, fill = sex2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Alcohol Use Disorders by Sex",
-       x = "Alcohol Use Disorder",
-       y = "Count",
-       fill = "Sex")
+  dplyr::count(sex2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+sex_alcdisorder_count %>%
+  ggplot(aes(x = sex2, 
+             y = n,
+             fill = sex2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Female" = "deeppink", 
+                               "Male" = "deepskyblue")) +
+  geom_text(aes(x = sex2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Alcohol Use Disorder by Sex",
+      x = "Sex",
+      y = "Count")
 ```
 
-Women were slightly more likely to have an alcohol use disorder than men.
+Women make up 51.4% of those with an alcohol use disorder, while men make up 48.6%.
 
 #### **Age and Alcohol Use Disorder**
 
 ```{r, fig.alt = "A bar plot with alcohol use disorder (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the age variable (measured as 18-25, 26-34, 35-49, 50-64, and 65+ years old). Plot illustrates the differences in age among those with an alcohol use disorder."}
-new_df %>%
+
+age_alcdisorder_count <- new_df %>%
   filter(alcdisorder_year2 %in% c("Yes")) %>%
-  ggplot(aes(alcdisorder_year2, fill = age2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Alcohol Use Disorders by Age",
-       x = "Alcohol Use Disorder",
-       y = "Count",
-       fill = "Age")
+  dplyr::count(age2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+age_alcdisorder_count %>%
+  ggplot(aes(x = age2, 
+             y = n,
+             fill = age2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("18-25" = "#BBFFBB", 
+                               "26-34" = "#86FF86",
+                               "35-49" = "#50FF50",
+                               "50-64" = "#00F100",
+                               "65+" = "#00BB00")) +
+  geom_text(aes(x = age2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Alcohol Use Disorder by Age",
+      x = "Age",
+      y = "Count")
 ```
 
-The 18-25 age category had the largest amount of people with an alcohol use disorder, followed by the 35-49 and 26-34 age categories.
+The 18-25 age category had the largest amount of people with an alcohol use disorder (35.2%), followed by the 35-49 (28.2%) and 26-34 (24.3%) age categories. The least likely age group to have an alcohol use disorder was those 65 years and older (4.4%).
 
 #### **Sexual Orientation and Alcohol Use Disorder**
 
-```{r, fig.alt = "A bar plot with alcohol use disorder (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the sexual orientation variable (measured as heterosexual, bisexual, gay/lesbian, other, and questioning). Plot illustrates the differences in sexual orientation among those with an alcohol use disorder."}
-new_df %>%
-  filter(alcdisorder_year2 %in% c("Yes")) %>%
-  ggplot(aes(alcdisorder_year2, fill = sex_orient2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Alcohol Use Disorders by Sexual Orientation",
-       x = "Alcohol Use Disorder",
-       y = "Count",
-       fill = "Sexual Orientation")
+##### Alcohol Use Disorder in Heterosexual People
+
+```{r, fig.alt = "A bar plot with alcohol use disorder (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include heterosexual respondents. Plot illustrates the differences in alcohol use disorder among heterosexual people."}
+
+heterosexual_alcdisorder_count <- new_df %>%
+  filter(sex_orient2 %in% c("Heterosexual")) %>%
+  dplyr::count(alcdisorder_year2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+
+heterosexual_alcdisorder_count %>%
+  ggplot(aes(x = alcdisorder_year2, 
+             y = n)) +
+  geom_col(fill = "darkgray") +
+  geom_text(aes(x = alcdisorder_year2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Alcohol Use Disorder For Heterosexuals",
+      x = "Alcohol Use Disorder",
+      y = "Count")
 ```
 
-Heterosexual people were the most likely sexual orientation group to have an alcohol use disorder, followed by bisexual people.
+Among heterosexual respondents, only 11.9% had an alcohol use disorder in the past year compared to 88.1% that did not.
+
+##### Alcohol Use Disorder in Bisexual People
+
+```{r, fig.alt = "A bar plot with alcohol use disorder (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include bisexual respondents. Plot illustrates the differences in alcohol use disorder among bisexual people."}
+
+bisexual_alcdisorder_count <- new_df %>%
+  filter(sex_orient2 %in% c("Bisexual")) %>%
+  dplyr::count(alcdisorder_year2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+
+bisexual_alcdisorder_count %>%
+  ggplot(aes(x = alcdisorder_year2, 
+             y = n)) +
+  geom_col(fill = "darkorchid") +
+  geom_text(aes(x = alcdisorder_year2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Alcohol Use Disorder For Bisexuals",
+      x = "Alcohol Use Disorder",
+      y = "Count")
+```
+
+Among bisexual respondents, only 19.4% had an alcohol use disorder in the past year compared to 80.6% that did not.
+
+##### Alcohol Use Disorder in Gay/Lesbian People
+
+```{r, fig.alt = "A bar plot with alcohol use disorder (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include gay/lesbian respondents. Plot illustrates the differences in alcohol use disorder among gay/lesbian people"}
+
+lg_alcdisorder_count <- new_df %>%
+  filter(sex_orient2 %in% c("Gay/Lesbian")) %>%
+  dplyr::count(alcdisorder_year2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+lg_alcdisorder_count %>%
+  ggplot(aes(x = alcdisorder_year2, 
+             y = n)) +
+  geom_col(fill = "deeppink3") +
+  geom_text(aes(x = alcdisorder_year2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Alcohol Use Disorder For Gays/Lesbians",
+      x = "Alcohol Use Disorder",
+      y = "Count")
+```
+
+Among gay and lesbian respondents, only 17.1% had an alcohol use disorder in the past year compared to 82.9% that did not.
 
 ### **Marijuana Use Disorder by Sex, Age, and Sexual Orientation**
 
 #### **Sex and Marijuana Use Disorder**
 
 ```{r, fig.alt = "A bar plot with marijuana use disorder (filtering by responses with yes) on the x-axis and count on the y-axis. There are two bars that represent the sex variable (measured as either male or female). Plot illustrates the differences in sex among those with a marijuana use disorder."}
-new_df %>%
+
+sex_mjdisorder_count <- new_df %>%
   filter(mjdisorder_year2 %in% c("Yes")) %>%
-  ggplot(aes(mjdisorder_year2, fill = sex2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Marijuana Use Disorders by Sex",
-       x = "Marijuana Use Disorder",
-       y = "Count",
-       fill = "Sex")
+  dplyr::count(sex2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+sex_mjdisorder_count %>%
+  ggplot(aes(x = sex2, 
+             y = n,
+             fill = sex2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Female" = "deeppink", 
+                               "Male" = "deepskyblue")) +
+  geom_text(aes(x = sex2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Marijuana Use Disorder by Sex",
+      x = "Sex",
+      y = "Count")
 ```
 
-Women were slightly more likely to have a marijuana use disorder than men.
+Women make up 53.2% of those with a marijuana use disorder, while men make up 46.8%.
 
 #### **Age and Marijuana Use Disorder**
 
 ```{r, fig.alt = "A bar plot with marijuana use disorder (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the age variable (measured as 18-25, 26-34, 35-49, 50-64, and 65+ years old). Plot illustrates the differences in age among those with a marijuana use disorder."}
-new_df %>%
+
+age_mjdisorder_count <- new_df %>%
   filter(mjdisorder_year2 %in% c("Yes")) %>%
-  ggplot(aes(mjdisorder_year2, fill = age2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Marijuana Use Disorders by Age",
-       x = "Marijuana Use Disorder",
-       y = "Count",
-       fill = "Age")
+  dplyr::count(age2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+age_mjdisorder_count %>%
+  ggplot(aes(x = age2, 
+             y = n,
+             fill = age2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("18-25" = "#BBFFBB", 
+                               "26-34" = "#86FF86",
+                               "35-49" = "#50FF50",
+                               "50-64" = "#00F100",
+                               "65+" = "#00BB00")) +
+  geom_text(aes(x = age2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Marijuana Use Disorder by Age",
+      x = "Age",
+      y = "Count")
 ```
 
-The 18-25 age category had the largest amount of people with a marijuana use disorder, followed by the 26-34 and 35-49 age categories.
+The 18-25 age category had the largest amount of people with a marijuana use disorder (49.9%), followed by the 26-34 (23.7%) and 35-49 (20.9%) age categories. The least likely age group to have a marijuana use disorder was those 65 years and older (1.5%).
 
 #### **Sexual Orientation and Marijuana Use Disorder**
 
-```{r, fig.alt = "A bar plot with marijuana use disorder (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the sexual orientation variable (measured as heterosexual, bisexual, gay/lesbian, other, and questioning). Plot illustrates the differences in sexual orientation among those with a marijuana use disorder."}
-new_df %>%
-  filter(mjdisorder_year2 %in% c("Yes")) %>%
-  ggplot(aes(mjdisorder_year2, fill = sex_orient2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Marijuana Use Disorders by Sexual Orientation",
-       x = "Marijuana Use Disorder",
-       y = "Count",
-       fill = "Sexual Orientation")
+##### Marijuana Use Disorder in Heterosexual People
+
+```{r, fig.alt = "A bar plot with marijuana use disorder (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include heterosexual respondents. Plot illustrates the differences in marijuana use disorder among heterosexual people."}
+
+heterosexual_mjdisorder_count <- new_df %>%
+  filter(sex_orient2 %in% c("Heterosexual")) %>%
+  dplyr::count(mjdisorder_year2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+
+heterosexual_mjdisorder_count %>%
+  ggplot(aes(x = mjdisorder_year2, 
+             y = n)) +
+  geom_col(fill = "darkgray") +
+  geom_text(aes(x = mjdisorder_year2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Marijuana Use Disorder For Heterosexuals",
+      x = "Marijuana Use Disorder",
+      y = "Count")
+
 ```
 
-Heterosexual people were the most likely sexual orientation group to have a marijuana use disorder, followed by bisexual people.
+Among heterosexual respondents, only 7.8% had a marijuana use disorder in the past year compared to 92.2% that did not.
+
+##### Marijuana Use Disorder in Bisexual People
+
+```{r, fig.alt = "A bar plot with marijuana use disorder (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include bisexual respondents. Plot illustrates the differences in marijuana use disorder among bisexual people."}
+
+bisexual_mjdisorder_count <- new_df %>%
+  filter(sex_orient2 %in% c("Bisexual")) %>%
+  dplyr::count(mjdisorder_year2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+
+bisexual_mjdisorder_count %>%
+  ggplot(aes(x = mjdisorder_year2, 
+             y = n)) +
+  geom_col(fill = "darkorchid") +
+  geom_text(aes(x = mjdisorder_year2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Marijuana Use Disorder For Bisexuals",
+      x = "Marijuana Use Disorder",
+      y = "Count")
+```
+
+Among bisexual respondents, only 23.6% had a marijuana use disorder in the past year compared to 76.4% that did not.
+
+##### Marijuana Use Disorder in Gay/Lesbian People
+
+```{r, fig.alt = "A bar plot with marijuana use disorder (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include gay/lesbian respondents. Plot illustrates the differences in marijuana use disorder among gay/lesbian people"}
+
+lg_mjdisorder_count <- new_df %>%
+  filter(sex_orient2 %in% c("Gay/Lesbian")) %>%
+  dplyr::count(mjdisorder_year2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+lg_mjdisorder_count %>%
+  ggplot(aes(x = mjdisorder_year2, 
+             y = n)) +
+  geom_col(fill = "deeppink3") +
+  geom_text(aes(x = mjdisorder_year2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Marijuana Use Disorder For Gays/Lesbians",
+      x = "Marijuana Use Disorder",
+      y = "Count")
+```
+
+Among gay and lesbian respondents, only 16.2% had a marijuana use disorder in the past year compared to 83.8% that did not.
 
 ### **Psychological Distress by Sex, Age, and Sexual Orientation**
 
 #### **Sex and Psychological Distress**
 
 ```{r, fig.alt = "A bar plot with psychological distress in the past month (filtering by responses with yes) on the x-axis and count on the y-axis. There are two bars that represent the sex variable (measured as either male or female). Plot illustrates the differences in sex among those who have experienced severe psychological distress in the past month."}
-new_df %>%
+
+sex_psychdistress_count <- new_df %>%
   filter(psych_distress_30_2 %in% c("Yes")) %>%
-  ggplot(aes(psych_distress_30_2, fill = sex2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Psychological Distress in Past Month by Sex",
-       x = "Psychological Distress in Past Month",
-       y = "Count",
-       fill = "Sex")
+  dplyr::count(sex2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+sex_psychdistress_count %>%
+  ggplot(aes(x = sex2, 
+             y = n,
+             fill = sex2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Female" = "deeppink", 
+                               "Male" = "deepskyblue")) +
+  geom_text(aes(x = sex2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Psychological Distress in Past Month by Sex",
+      x = "Sex",
+      y = "Count")
 ```
 
-Men were much more likely than women to experience severe psychological distress in the past month.
+Men were much more likely (63.1%) than women (36.9%) to have experienced severe psychological distress in the past month.
 
 #### **Age and Psychological Distress**
 
 ```{r, fig.alt = "A bar plot with psychological distress in the past month (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the age variable (measured as 18-25, 26-34, 35-49, 50-64, and 65+ years old). Plot illustrates the differences in age among those who have experienced severe psychological distress in the past month."}
-new_df %>%
+
+age_psychdistress_count <- new_df %>%
   filter(psych_distress_30_2 %in% c("Yes")) %>%
-  ggplot(aes(psych_distress_30_2, fill = age2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Psychological Distress in Past Month by Age",
-       x = "Psychological Distress in Past Month",
-       y = "Count",
-       fill = "Age")
+  dplyr::count(age2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+age_psychdistress_count %>%
+  ggplot(aes(x = age2, 
+             y = n,
+             fill = age2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("18-25" = "#BBFFBB", 
+                               "26-34" = "#86FF86",
+                               "35-49" = "#50FF50",
+                               "50-64" = "#00F100",
+                               "65+" = "#00BB00")) +
+  geom_text(aes(x = age2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Recent Psychological Distress by Age",
+      x = "Age",
+      y = "Count")
 ```
 
-The 18-25 age category was the most common to have experienced severe psychological distress in the past month, followed by the 26-34 and 35-49 age categories.
+The 18-25 age category was the most common to have experienced severe psychological distress in the past month (50.1%), followed by the 26-34 (23.6%)and 35-49 (20.1%) age categories. The least likely age group to have experienced severe psychological distress in the past month was those 65 years and older (1.9%).
 
 #### **Sexual Orientation and Psychological Distress**
 
-```{r, fig.alt= "A bar plot with psychological distress in the past month (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the sexual orientation variable (measured as heterosexual, bisexual, gay/lesbian, other, and questioning). Plot illustrates the differences in sexual orientation among those who have experienced severe psychological distress in the past month."}
-new_df %>%
-  filter(psych_distress_30_2 %in% c("Yes")) %>%
-  ggplot(aes(psych_distress_30_2, fill = sex_orient2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Psychological Distress in Past Month by Sexual Orientation",
-       x = "Psychological Distress in Past Month",
-       y = "Count",
-       fill = "Sexual Orientation")
+##### Psychological Distress in Heterosexual People
+
+```{r, fig.alt = "A bar plot with psychological distress in the past month (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include heterosexual respondents. Plot illustrates the differences among heterosexual people in experiencing recent psychological distress."}
+
+heterosexual_psychdistress_count <- new_df %>%
+  filter(sex_orient2 %in% c("Heterosexual")) %>%
+  dplyr::count(psych_distress_30_2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+heterosexual_psychdistress_count %>%
+  ggplot(aes(x = psych_distress_30_2, 
+             y = n)) +
+  geom_col(fill = "darkgray") +
+  geom_text(aes(x = psych_distress_30_2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Recent Psychological Distress For Heterosexuals",
+      x = "Experienced Psychological Distress in Past Month",
+      y = "Count")
 ```
 
-Heterosexual people were the most likely sexual orientation group to experience severe psychological distress in the past month, followed by bisexual people.
+Among heterosexual respondents, only 8.2% experienced severe psychological distress in the past month compared to 91.8% that did not.
+
+##### Psychological Distress in Bisexual People
+
+```{r, fig.alt = "A bar plot with psychological distress in the past month (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include bisexual respondents. Plot illustrates the differences among bisexual people in experiencing recent psychological distress."}
+
+bisexual_psychdistress_count <- new_df %>%
+  filter(sex_orient2 %in% c("Bisexual")) %>%
+  dplyr::count(psych_distress_30_2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+bisexual_psychdistress_count %>%
+  ggplot(aes(x = psych_distress_30_2, 
+             y = n)) +
+  geom_col(fill = "darkorchid") +
+  geom_text(aes(x = psych_distress_30_2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Recent Psychological Distress For Bisexuals",
+      x = "Experienced Psychological Distress in Past Month",
+      y = "Count")
+```
+
+Among bisexual respondents, only 28.6% experienced severe psychological distress in the past month compared to 71.4% that did not.
+
+##### Psychological Distress in Gay/Lesbian People
+
+```{r, fig.alt = "A bar plot with psychological distress in the past month (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include gay/lesbian respondents. Plot illustrates the differences among gay/lesbian people in experiencing recent psychological distress."}
+
+lg_psychdistress_count <- new_df %>%
+  filter(sex_orient2 %in% c("Gay/Lesbian")) %>%
+  dplyr::count(psych_distress_30_2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+lg_psychdistress_count %>%
+  ggplot(aes(x = psych_distress_30_2, 
+             y = n)) +
+  geom_col(fill = "deeppink3") +
+  geom_text(aes(x = psych_distress_30_2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Recent Psychological Distress For Gays/Lesbians",
+      x = "Experienced Psychological Distress in Past Month",
+      y = "Count")
+```
+
+Among gay and lesbian respondents, only 19.6% experienced severe psychological distress in the past month compared to 80.4% that did not.
 
 ### **Suicidality by Sex, Age, and Sexual Orientation**
 
 #### **Sex and Suicidality**
 
 ```{r, fig.alt = "A bar plot with suicidal thoughts, plans, and/or attempts in the past year (filtering by responses with yes) on the x-axis and count on the y-axis. There are two bars that represent the sex variable (measured as either male or female). Plot illustrates the differences in sex among those who have experienced suicidal thoughts, plans, and/or attempts in the past year."}
-new_df %>%
+
+sex_suicide_count <- new_df %>%
   filter(suicide2 %in% c("Yes")) %>%
-  ggplot(aes(suicide2, fill = sex2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Suicidal Thoughts, Plans, and/or Attempts in Past Year by Sex",
-       x = "Suicidal Thoughts, Plans, and/or Attempts in Past Year",
-       y = "Count",
-       fill = "Sex")
+  dplyr::count(sex2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+sex_suicide_count %>%
+  ggplot(aes(x = sex2, 
+             y = n,
+             fill = sex2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Female" = "deeppink", 
+                               "Male" = "deepskyblue")) +
+  geom_text(aes(x = sex2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Suicidal Thoughts, Plans, and/or Attempts in Past Year by Sex",
+      x = "Sex",
+      y = "Count")
 ```
 
-Men were more likely to experience suicidal thoughts, plans, and/or attempts in the past year compared to women.
+Men were more likely to experience suicidal thoughts, plans, and/or attempts in the past year (59.1%) compared to women (40.9%).
 
 #### **Age and Suicidality**
 
 ```{r, fig.alt = "A bar plot with suicidal thoughts, plans, and/or attempts in the past year (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the age variable (measured as 18-25, 26-34, 35-49, 50-64, and 65+ years old). Plot illustrates the differences in age among those who have experienced suicidal thoughts, plans, and/or attempts in the past year."}
-new_df %>%
+
+age_suicide_count <- new_df %>%
   filter(suicide2 %in% c("Yes")) %>%
-  ggplot(aes(suicide2, fill = age2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Suicidal Thoughts, Plans, and/or Attempts in Past Year by Age",
-       x = "Suicidal Thoughts, Plans, and/or Attempts in Past Year",
-       y = "Count",
-       fill = "Age")
+  dplyr::count(age2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+age_suicide_count %>%
+  ggplot(aes(x = age2, 
+             y = n,
+             fill = age2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("18-25" = "#BBFFBB", 
+                               "26-34" = "#86FF86",
+                               "35-49" = "#50FF50",
+                               "50-64" = "#00F100",
+                               "65+" = "#00BB00")) +
+  geom_text(aes(x = age2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Suicidal Thoughts, Plans, and/or Attempts in Past Year by Age",
+      x = "Age",
+      y = "Count")
 ```
 
-The 18-25 age category was the most common to have experienced suicidal thoughts, plans and/or attempts in the past year, followed by the 26-34 and 35-49 age categories.
+The 18-25 age category was the most common to have experienced suicidal thoughts, plans and/or attempts in the past year (52.3%), followed by the 26-34 (21.6%) and 35-49 (19.1%) age categories. The least likely age group to have experienced suicidality in the past year was those 65 years and older (2.6%).
 
 #### **Sexual Orientation and Suicidality**
 
-```{r, fig.alt = "A bar plot with suicidal thoughts, plans, and/or attempts in the past year (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the sexual orientation variable (measured as heterosexual, bisexual, gay/lesbian, other, and questioning). Plot illustrates the differences in sexual orientation among those who have experienced suicidal thoughts, plans, and/or attempts in the past year."}
-new_df %>%
-  filter(suicide2 %in% c("Yes")) %>%
-  ggplot(aes(suicide2, fill = sex_orient2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Suicidal Thoughts, Plans, Attempts in Past Year by Sexual Orientation",
-       x = "Suicidal Thoughts, Plans, and/or Attempts in Past Year",
-       y = "Count",
-       fill = "Sexual Orientation")
+##### Suicidality in Heterosexual People
+
+```{r, fig.alt = "A bar plot with suicidality in the past year (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include heterosexual respondents. Plot illustrates the differences among heterosexual people in experiencing suicidal thoughts, plans, and/or attempts in the past year."}
+
+heterosexual_suicide_count <- new_df %>%
+  filter(sex_orient2 %in% c("Heterosexual")) %>%
+  dplyr::count(suicide2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+heterosexual_suicide_count %>%
+  ggplot(aes(x = suicide2, 
+             y = n)) +
+  geom_col(fill = "darkgray") +
+  geom_text(aes(x = suicide2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Suicidality in Past Year For Heterosexuals",
+      x = "Experienced Suicidal Thoughts, Plans, and/or Attempts in Past Year",
+      y = "Count")
 ```
 
-Heterosexual people were the most likely sexual orientation group to have experienced suicidal thoughts, plans and/or attempts in the past year, followed by bisexual people.
+Among heterosexual respondents, only 5.2% experienced suicidal thoughts, plans, and/or attempts in the past year compared to 94.8% that did not.
+
+##### Suicidality in Bisexual People
+
+```{r, fig.alt = "A bar plot with suicidality in the past year (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include bisexual respondents. Plot illustrates the differences among bisexual people in experiencing suicidal thoughts, plans, and/or attempts in the past year."}
+
+bisexual_suicide_count <- new_df %>%
+  filter(sex_orient2 %in% c("Bisexual")) %>%
+  dplyr::count(suicide2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+bisexual_suicide_count %>%
+  ggplot(aes(x = suicide2, 
+             y = n)) +
+  geom_col(fill = "darkorchid") +
+  geom_text(aes(x = suicide2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Suicidality in Past Year For Bisexuals",
+      x = "Experienced Suicidal Thoughts, Plans, and/or Attempts in Past Year",
+      y = "Count")
+```
+
+Among bisexual respondents, only 21.8% experienced suicidal thoughts, plans, and/or attempts in the past year compared to 78.2% that did not.
+
+##### Suicidality in Gay/Lesbian People
+
+```{r, fig.alt = "A bar plot with suicidality in the past year (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include gay/lesbian respondents. Plot illustrates the differences among gay/lesbian people in experiencing suicidal thoughts, plans, and/or attempts in the past year."}
+
+lg_suicide_count <- new_df %>%
+  filter(sex_orient2 %in% c("Gay/Lesbian")) %>%
+  dplyr::count(suicide2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+lg_suicide_count %>%
+  ggplot(aes(x = suicide2, 
+             y = n)) +
+  geom_col(fill = "deeppink3") +
+  geom_text(aes(x = suicide2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Suicidality in Past Year For Gays/Lesbians",
+      x = "Experienced Suicidal Thoughts, Plans, and/or Attempts in Past Year",
+      y = "Count")
+```
+
+Among gay and lesbian respondents, only 15% experienced suicidal thoughts, plans, and/or attempts in the past year compared to 85% that did not.
 
 ### **Major Depressive Episode by Sex, Age, and Sexual Orientation**
 
 #### **Sex and Major Depressive Episode**
 
 ```{r, fig.alt = "A bar plot with major depressive episode in the past year (filtering by responses with yes) on the x-axis and count on the y-axis. There are two bars that represent the sex variable (measured as either male or female). Plot illustrates the differences in sex among those who have experienced a major depressive episode in the past year."}
-new_df %>%
+
+sex_mde_count <- new_df %>%
   filter(majordepressive_year2 %in% c("Yes")) %>%
-  ggplot(aes(majordepressive_year2, fill = sex2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Major Depressive Episode in Past Year by Sex",
-       x = "MDE in Past Year",
-       y = "Count",
-       fill = "Sex")
+  dplyr::count(sex2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+sex_mde_count %>%
+  ggplot(aes(x = sex2, 
+             y = n,
+             fill = sex2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("Female" = "deeppink", 
+                               "Male" = "deepskyblue")) +
+  geom_text(aes(x = sex2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Major Depressive Episode in Past Year by Sex",
+      x = "Sex",
+      y = "Count")
 ```
 
-Men were much more likely than women to have experienced a major depressive episode in the past year.
+Men were much more likely (66.4%) than women (33.6%) to have experienced a major depressive episode in the past year.
+
+#### Age and Major Depressive Episode
 
 ```{r, fig.alt = "A bar plot with major depressive episode in the past year (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the age variable (measured as 18-25, 26-34, 35-49, 50-64, and 65+ years old). Plot illustrates the differences in age among those who have experienced a major depressive episode in the past year."}
-new_df %>%
+
+age_mde_count <- new_df %>%
   filter(majordepressive_year2 %in% c("Yes")) %>%
-  ggplot(aes(majordepressive_year2, fill = age2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Major Depressive Episode in Past Year by Age",
-       x = "MDE in Past Year",
-       y = "Count",
-       fill = "Age")
+  dplyr::count(age2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+age_mde_count %>%
+  ggplot(aes(x = age2, 
+             y = n,
+             fill = age2)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("18-25" = "#BBFFBB", 
+                               "26-34" = "#86FF86",
+                               "35-49" = "#50FF50",
+                               "50-64" = "#00F100",
+                               "65+" = "#00BB00")) +
+  geom_text(aes(x = age2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Major Depressive Episode in Past Year by Age",
+      x = "Age",
+      y = "Count")
 ```
 
-The 18-25 age category was the most common to have experienced a major depressive episode in the past year, followed by the 26-34 and 35-49 age categories.
+The 18-25 age category was the most common to have experienced a major depressive episode in the past year (45.1%), followed by the 26-34 (23.1%) and 35-49 (22.6%) age categories. The least likely age group to have experienced a major depressive episode in the past year was those 65 years and older (3.2%).
 
 #### **Sexual Orientation and Major Depressive Episode**
 
-```{r, fig.alt = "A bar plot with major depressive episode in the past year (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the sexual orientation variable (measured as heterosexual, bisexual, gay/lesbian, other, and questioning). Plot illustrates the differences in sexual orientation among those who have experienced a major depressive episode in the past year."}
-new_df %>%
-  filter(majordepressive_year2 %in% c("Yes")) %>%
-  ggplot(aes(majordepressive_year2, fill = sex_orient2)) +
-    geom_bar(position = "dodge",
-             alpha = 1) +
-    theme_minimal() +
-    theme(plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Major Depressive Episode in Past Year by Sexual Orientation",
-       x = "MDE in Past Year",
-       y = "Count",
-       fill = "Sexual Orientation")
+##### Major Depressive Episodes in Heterosexual People
+
+```{r, fig.alt = "A bar plot with major depressive episode in the past year (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include heterosexual respondents. Plot illustrates the differences among heterosexual people in experiencing a major depressive episode in the past year."}
+
+heterosexual_mde_count <- new_df %>%
+  filter(sex_orient2 %in% c("Heterosexual")) %>%
+  dplyr::count(majordepressive_year2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+heterosexual_mde_count %>%
+  ggplot(aes(x = majordepressive_year2, 
+             y = n)) +
+  geom_col(fill = "darkgray") +
+  geom_text(aes(x = majordepressive_year2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Major Depressive Episode in Past Year For Heterosexuals",
+      x = "Experienced Major Depressive Episode in Past Year",
+      y = "Count")
 ```
 
-Heterosexual people were the most likely sexual orientation group to have experienced a major depressive episode in the past year, followed by bisexual people.
+Among heterosexual respondents, only 8.8% experienced suicidal thoughts, plans, and/or attempts in the past year compared to 91.2% that did not.
+
+##### Major Depressive Episodes in Bisexual People
+
+```{r, fig.alt = "A bar plot with major depressive episode in the past year (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include bisexual respondents. Plot illustrates the differences among bisexual people in experiencing a major depressive episode in the past year."}
+
+bisexual_mde_count <- new_df %>%
+  filter(sex_orient2 %in% c("Bisexual")) %>%
+  dplyr::count(majordepressive_year2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+bisexual_mde_count %>%
+  ggplot(aes(x = majordepressive_year2, 
+             y = n)) +
+  geom_col(fill = "darkorchid") +
+  geom_text(aes(x = majordepressive_year2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Major Depressive Episode in Past Year For Bisexuals",
+      x = "Experienced Major Depressive Episode in Past Year",
+      y = "Count")
+```
+
+Among bisexual respondents, only 31.1% experienced suicidal thoughts, plans, and/or attempts in the past year compared to 68.9% that did not.
+
+##### Major Depressive Episodes in Gay and Lesbian People
+
+```{r, fig.alt = "A bar plot with major depressive episode in the past year (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include gay/lesbian respondents. Plot illustrates the differences among gay/lesbian people in experiencing a major depressive episode in the past year."}
+
+lg_mde_count <- new_df %>%
+  filter(sex_orient2 %in% c("Gay/Lesbian")) %>%
+  dplyr::count(majordepressive_year2) %>%
+  dplyr::mutate(perc = n/sum(n) * 100)
+
+
+lg_mde_count %>%
+  ggplot(aes(x = majordepressive_year2, 
+             y = n)) +
+  geom_col(fill = "deeppink3") +
+  geom_text(aes(x = majordepressive_year2, y = n,
+                label = paste0(n, " (", round(perc, 1),"%)"),
+                vjust = -0.5
+                               )) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = expansion(mult = c(0,0.1))) +
+  labs(title = "Major Depressive Episode in Past Year For Gays/Lesbians",
+      x = "Experienced Major Depressive Episode in Past Year",
+      y = "Count")
+```
+
+Among gay and lesbian respondents, only 18.3% experienced suicidal thoughts, plans, and/or attempts in the past year compared to 81.7% that did not.
 
 ### **Substance Use Disorders and Suicidality**
 
@@ -1343,15 +2116,106 @@ There is a weak positive correlation (r = 0.35) between marijuana use disorder a
 
 ### **Model 1**
 
-Hypothesis 1: LGB individuals who have experienced psychological distress in the past month are more likely to engage in regular substance use (alcohol, cigarette, and marijuana) compared to non-LGB individuals.
+Hypothesis 1: LGB individuals who engage in regular substance use (alcohol and marijuana) in the past month are more likely to have experienced psychological distress in the past month compared to non-LGB individuals.
 
 ```{r}
+#predicted probability- predicting psychological distress based on LGB status
+#using observed case approach
+
 #logistic regression model with interaction
 mod1 <- glm(psych_distress_30 ~ majordepressive_year + suicide + sex + age + sex_orient3 * (alc30use + cig30use + mj30use),
             data = new_df,
             family = binomial)
 
 summary(mod1)
+```
+
+```{r}
+#sex_orient3 = 0
+#sexual orientation = non-LGB
+
+new_df$sex_orient3 <- as.numeric(new_df$sex_orient3)
+class(new_df$sex_orient3)
+
+new_df$psych_distress_30 <- as.numeric(new_df$sex_orient3)
+class(new_df$sex_orient3)
+
+sexorient0 <- new_df %>%
+  dplyr::mutate(sex_orient3 = 0)
+
+sexorient0 %>%
+  head(7) %>%
+  knitr::kable()
+```
+
+```{r}
+#sex_orient3 = 1
+#sexual orientation = LGB
+sexorient1 <- new_df %>%
+  dplyr::mutate(sex_orient3 = 1)
+
+sexorient1 %>%
+  head(7) %>%
+  knitr::kable()
+```
+
+```{r}
+#calculating predicted probabilities
+#sex_orient3 = 0
+#sexual orientation = non-LGB
+
+sexorient0 <- sexorient0 %>%
+  dplyr::mutate(pred_probs = predict(
+  mod1,
+  newdata = sexorient0,
+  type = "response"
+  ))
+
+sexorient0 %>%
+  head(7) %>%
+  knitr::kable()
+```
+
+```{r}
+#calculating predicted probabilities
+#sex_orient3 = 1
+#sexual orientation = LGB
+
+sexorient1 <- sexorient1 %>%
+  dplyr::mutate(pred_probs = predict(
+  mod1,
+  newdata = sexorient1,
+  type = "response"
+  ))
+
+sexorient1 %>%
+  head(7) %>%
+  knitr::kable()
+```
+
+```{r}
+#average predicted probabilities
+obs_case_lgb_pprobs <- list(sexorient0, sexorient1) %>%
+  purrr::map_dbl(~ mean(.x$pred_probs))
+
+tibble::tibble(
+  'Sexual Orientation' = 0:1,
+  'Predicted Probability of Recent Psychological Distress' = obs_case_lgb_pprobs
+) %>% knitr::kable()
+
+0.1389-0.1018
+
+(0.1389-0.1018)/0.1018
+```
+
+```{r, fig.alt = "Plot showing the predicted values using the average case approach of experiencing recent psychological distress by sexual orientation."}
+#predicted probabilities plot
+#uses AVERAGE case approach- different than table above
+plot(estimate_relation(mod1, by = "sex_orient3")) +
+  ggtitle("Predicted Value of Recent Psychological Distress by Sexual Orientation", 
+          subtitle = "0 = Non-LGB, 1 = LGB") +
+  xlab("Sexual Orientation") +
+  ylab("Predicted Value of Recent Psychological Distress")
 ```
 
 ```{r, fig.alt= "Table that shows the logistic regression output for Model 1. Columns in the table are 'characteristics' which corresponds to variable labels, 'OR' which shows the odds ratio, 'SE' which shows the standard error, '95% CI' which shows the 95% confidence interval for the odds ratio, and 'p-value' which includes stars to show what level the results are significant at."}
@@ -1362,20 +2226,89 @@ mod1tbl <- tbl_regression(mod1, exponentiate = TRUE) %>%
 mod1tbl
 ```
 
-This model shows that individuals who have experienced a major depressive episode in the past year are almost 8 times as likely to have experienced severe psychological distress in the past month compared to individuals without such a history (p \< 0.001). Individuals who have had suicidal thoughts, plans, and/or attempts in the past year are around 5.5 times more likely to have experienced psychological distress in the past month compared to individuals without a history of suicidality (p \< 0.001). Men compared to women are around 1.25 times as likely to have experienced severe psychological distress in the past month (p \< 0.001). Older individuals are less likely to experience psychological distress, with each higher age category being associated with around 31% lower odds of severe psychological distress taking place (p \< 0.001). This model shows that, on average, LGB individuals are almost twice as likely to experience psychological distress compared to non-LGB individuals (p \< 0.001). This aligns with pre-existing research indicating more severe mental health struggles in LGBT populations. Frequent cigarette smoking (p \< 0.001) and marijuana use (p \< 0.001) are positively associated with psychological distress, while frequent alcohol consumption is not significantly associated with psychological distress.
+This model shows that individuals who have experienced a major depressive episode in the past year are nearly 8 times as likely to have experienced severe psychological distress in the past month compared to individuals without such a history (p \< 0.001). Individuals who have had suicidal thoughts, plans, and/or attempts in the past year are around 5.5 times more likely to have experienced psychological distress in the past month compared to individuals without a history of suicidality (p \< 0.001).
 
-Hypothesis 1 is not supported with these results. The relationships between alcohol use and psychological distress (p \< 0.05), cigarette use and psychological distress (p \< 0.05), and marijuana use and psychological distress (p \< 0.001) are all weaker for LGB individuals compared to non-LGB individuals.
+Men compared to women are around 1.25 times as likely to have experienced severe psychological distress in the past month (p \< 0.001). Older individuals are less likely to experience psychological distress, with each higher age category being associated with around 31% lower odds of severe psychological distress taking place (p \< 0.001).
+
+This model shows that, on average, LGB individuals are almost twice as likely to experience psychological distress compared to non-LGB individuals (p \< 0.001). The predicted probability using the observed case approach for LGB individuals to have experienced severe psychological distress is around 0.04 higher than non-LGB individuals. While this does not sound like a large number, this means that LGB people are 36.4% as likely to experience psychological distress compared to thier non-LGB counterparts, according to predicted probability estimates. This aligns with pre-existing research indicating more severe mental health struggles in LGBT populations.
+
+Frequent cigarette smoking (p \< 0.001) and marijuana use (p \< 0.001) are positively associated with psychological distress, while frequent alcohol consumption is not significantly associated with psychological distress.
+
+Hypothesis 1 is not supported with these results. The relationships between alcohol use and psychological distress (p \< 0.05), cigarette use and psychological distress (p \< 0.05), and marijuana use and psychological distress (p \< 0.001) are all weaker for LGB individuals compared to non-LGB individuals. This is likely due to the fact that heterosexual/non-LGB people make up the vast majority of the sample.
 
 ### **Model 2**
 
-Hypothesis 2: LGB individuals who report experiencing a past year major depressive episode will be more likely to engage in regular substance use (alcohol, cigarette, and marijuana) compared to non-LGB individuals.
+Hypothesis 2: LGB individuals who engage in regular substance use (alcohol, cigarette, and marijuana) are more likely to report experiencing a past year major depressive episode compared to non-LGB individuals.
 
 ```{r}
-mod2 <- glm(majordepressive_year ~ suicide + psych_distress_30 + age + sex + sex_orient3 * (alc30use + cig30use + mj30use),
+#predicted probability- predicting major depressive episodes based on LGB status
+#using observed case approach
+
+#logistic regression model with interaction
+mod2 <- glm(majordepressive_year ~ suicide + age + sex + sex_orient3 * (alc30use + cig30use + mj30use),
             data = new_df,
             family = binomial)
 
 summary(mod2)
+```
+
+```{r}
+#calculating predicted probabilities
+#sex_orient3 = 0
+#sexual orientation = non-LGB
+
+sexorient0 <- sexorient0 %>%
+  dplyr::mutate(pred_probs = predict(
+    mod2,
+    newdata = sexorient0,
+    type = "response"
+  ))
+
+sexorient0 %>%
+  head(7) %>%
+  knitr::kable()
+```
+
+```{r}
+#calculating predicted probabilities
+#sex_orient3 = 1
+#sexual orientation = LGB
+
+sexorient1 <- sexorient1 %>%
+  dplyr::mutate(pred_probs = predict(
+  mod2,
+  newdata = sexorient1,
+  type = "response"
+  ))
+
+sexorient1 %>%
+  head(7) %>%
+  knitr::kable()
+```
+
+```{r}
+#average predicted probabilities
+obs_case_lgb_pprobs2 <- list(sexorient0, sexorient1) %>%
+  purrr::map_dbl(~ mean(.x$pred_probs))
+
+tibble::tibble(
+  'Sexual Orientation' = 0:1,
+  'Predicted Probability of Major Depressive Episode in Past Year' = obs_case_lgb_pprobs2
+) %>% knitr::kable()
+
+0.1882-0.1025
+
+(0.1882-0.1025)/0.1025
+```
+
+```{r, fig.alt = "Plot showing the predicted values using the average case approach of experiencing a major depressive episode by sexual orientation."}
+#predicted probabilities plot
+#uses AVERAGE case approach- different than table above
+plot(estimate_relation(mod2, by = "sex_orient3")) +
+  ggtitle("Predicted Value of Experiencing a MDE by Sexual Orientation", 
+          subtitle = "0 = Non-LGB, 1 = LGB") +
+  xlab("Sexual Orientation") +
+  ylab("Predicted Value of Major Depressive Episode")
 ```
 
 ```{r, fig.alt= "Table that shows the logistic regression output for Model 2. Columns in the table are 'characteristics' which corresponds to variable labels, 'OR' which shows the odds ratio, 'SE' which shows the standard error, '95% CI' which shows the 95% confidence interval for the odds ratio, and 'p-value' which includes stars to show what level the results are significant at."}
@@ -1386,23 +2319,90 @@ mod2tbl <- tbl_regression(mod2, exponentiate = TRUE) %>%
 mod2tbl
 ```
 
-This model shows that older individuals are less likely to experience major depressive episodes, with each higher age category associated with approximately 13% lower odds of a MDE (p \< 0.001). Men compared to women are around 1.6 times as likely to have experienced a MDE in the past year (p \< 0.001). This model also shows that LGB individuals are around twice as likely to experience a major depressive episode compared to non-LGB individuals (p \< 0.001). The number of days respondents drank alcohol in the past month is not significantly associated with the likelihood of experiencing MDEs. Despite this, frequent cigarette use (p \< 0.05) and marijuana use (p \< 0.001) are both associated with a greater likelihood of having experienced a MDE in the past year.
+This model shows that older individuals are less likely to experience major depressive episodes, with each higher age category associated with approximately 13% lower odds of a MDE (p \< 0.001). Men compared to women are around 1.6 times as likely to have experienced a MDE in the past year (p \< 0.001).
 
-Hypothesis 2 is not supported by these results. There is no significant difference between LGB and non-LGB individuals in terms of the relationship between alcohol use and a MDE. Cigarette use (p \< 0.05) and marijuana use (p \< 0.05) are also more weakly associated with MDEs for LGB individuals compared to non-LGB individuals.
+This model also shows that LGB individuals are around twice as likely to experience a major depressive episode compared to non-LGB individuals (p \< 0.001). The predicted probability using the observed case approach for LGB individuals to have experienced a major depressive episode within the past year is around 0.085 higher than non-LGB individuals. While this does not sound like a large number, this means that LGB people are 83.6% more likely to experience major depressive episodes compared to their non-LGB counterparts, according to predicted probability estimates. Similarly to Model 1, these results align with pre-existing research showing that LGBT populations tend to struggle more with their mental health than non-LGBT populations.
+
+The number of days respondents drank alcohol in the past month is not significantly associated with the likelihood of experiencing MDEs. Despite this, frequent cigarette use (p \< 0.05) and marijuana use (p \< 0.001) are both associated with a greater likelihood of having experienced a MDE in the past year.
+
+Hypothesis 2 is not supported by these results. There is no significant difference between LGB and non-LGB individuals in terms of the relationship between alcohol use and a MDE. Cigarette use (p \< 0.05) and marijuana use (p \< 0.05) are also more weakly associated with MDEs for LGB individuals compared to non-LGB individuals. This is likely due to the fact that heterosexual/non-LGB people make up the vast majority of the sample.
 
 ### **Model 3**
 
-Hypothesis 3: LGB individuals who have experienced serious psychological distress in the past month will be more likely to have a higher frequency of binge drinking in the past month compared to non-LGB individuals.
+Hypothesis 3: LGB individuals who have had a substance use disorder in the past year are more likely to have experienced suicidal thoughts, plans, and/or attempts in the past year compared to non-LGB individuals.
 
 ```{r}
-mod3 <- glm(psych_distress_30 ~ suicide + majordepressive_year + age + sex + (sex_orient3 * alcbinge30),
+#predicted probability- predicting major depressive episodes based on LGB status
+#using observed case approach
+
+#logistic regression model with interaction
+mod3 <- glm(suicide ~ majordepressive_year + age + sex + (sex_orient3 * (alcdisorder_year + mjdisorder_year + nicdepend)),
             data = new_df,
             family = binomial)
 
 summary(mod3)
 ```
 
-```{r, fig.alt= "Table that shows the logistic regression output for Model 3. Columns in the table are 'characteristics' which corresponds to variable labels, 'OR' which shows the odds ratio, 'SE' which shows the standard error, '95% CI' which shows the 95% confidence interval for the odds ratio, and 'p-value' which includes stars to show what level the results are significant at."}
+```{r}
+#calculating predicted probabilities
+#sex_orient3 = 0
+#sexual orientation = non-LGB
+
+sexorient0 <- sexorient0 %>%
+  dplyr::mutate(pred_probs = predict(
+    mod3,
+    newdata = sexorient0,
+    type = "response"
+  ))
+
+sexorient0 %>%
+  head(7) %>%
+  knitr::kable()
+```
+
+```{r}
+#calculating predicted probabilities
+#sex_orient3 = 1
+#sexual orientation = LGB
+
+sexorient1 <- sexorient1 %>%
+  dplyr::mutate(pred_probs = predict(
+  mod3,
+  newdata = sexorient1,
+  type = "response"
+  ))
+
+sexorient1 %>%
+  head(7) %>%
+  knitr::kable()
+```
+
+```{r}
+#average predicted probabilities
+obs_case_lgb_pprobs3 <- list(sexorient0, sexorient1) %>%
+  purrr::map_dbl(~ mean(.x$pred_probs))
+
+tibble::tibble(
+  'Sexual Orientation' = 0:1,
+  'Predicted Probability of Suicidality in Past Year' = obs_case_lgb_pprobs3
+) %>% knitr::kable()
+
+0.1117-0.0626
+
+(0.1117-0.0626)/0.0626
+```
+
+```{r, fig.alt = "Plot showing the predicted values using the average case approach of experiencing suicidality by sexual orientation."}
+#predicted probabilities plot
+#uses AVERAGE case approach- different than table above
+plot(estimate_relation(mod3, by = "sex_orient3")) +
+  ggtitle("Predicted Values of Experiencing Suicidality by Sexual Orientation", 
+          subtitle = "0 = Non-LGB, 1 = LGB") +
+  xlab("Sexual Orientation") +
+  ylab("Predicted Value of Suicidality")
+```
+
+```{r, fig.alt= "Table that shows the logistic regression output for Model 4. Columns in the table are 'characteristics' which corresponds to variable labels, 'OR' which shows the odds ratio, 'SE' which shows the standard error, '95% CI' which shows the 95% confidence interval for the odds ratio, and 'p-value' which includes stars to show what level the results are significant at."}
 mod3tbl <- tbl_regression(mod3, exponentiate = TRUE) %>%
   add_significance_stars(pattern = "{p.value}{stars}",
                          hide_ci = FALSE, hide_p = FALSE)
@@ -1410,33 +2410,13 @@ mod3tbl <- tbl_regression(mod3, exponentiate = TRUE) %>%
 mod3tbl
 ```
 
-This model shows that more frequent binge drinking is associated with a higher likelihood of psychological distress (p \< 0.001).
+This model shows that older individuals are significantly less likely to experience suicidal thoughts, plans or attempts, with each higher age category decreasing the risk of suicidality by around 21% (p \< 0.001). Women are around 20% more likely to experience suicidal thoughts, plans or attempts than men (p \< 0.001).
 
-Hypothesis 3 is not supported by this model. The relationship between binge drinking and psychological distress does not significantly differ between LGB and non-LGB individuals.
+This model also shows that LGB individuals are approximately twice as likely to experience suicidal thoughts, plans or attempts than non-LGB individuals (p \< 0.001). The predicted probability using the observed case approach for LGB individuals to have experienced suicidality in the past year is around 0.05 higher than non-LGB individuals. While this does not sound like a large number, this means that LGB people are 78.4% more likely to experience suicidality compared to their non-LGB counterparts, according to predicted probability estimates. Similarly to Models 1 and 2, these results also align with pre-existing research that has shown LGBT people tend to have poorer health outcomes than non-LGBT people.
 
-### **Model 4**
+Individuals who have either an alcohol use disorder (p \< 0.001) or a marijuana use disorder (p \< 0.001) are around 1.5 times as likely to also experience suicidal thoughts, plans or attempts. Nicotine dependence is not significantly associated with the likelihood of suicidality in this model.
 
-Hypothesis 4: LGB individuals who have had suicidal thoughts, plans, or attempts in the past year will be more likely to have a substance use disorder compared to non-LGB individuals.
-
-```{r}
-mod4 <- glm(suicide ~ psych_distress_30 + majordepressive_year + age + sex + (sex_orient3 * (alcdisorder_year + mjdisorder_year + nicdepend)),
-            data = new_df,
-            family = binomial)
-
-summary(mod4)
-```
-
-```{r, fig.alt= "Table that shows the logistic regression output for Model 4. Columns in the table are 'characteristics' which corresponds to variable labels, 'OR' which shows the odds ratio, 'SE' which shows the standard error, '95% CI' which shows the 95% confidence interval for the odds ratio, and 'p-value' which includes stars to show what level the results are significant at."}
-mod4tbl <- tbl_regression(mod4, exponentiate = TRUE) %>%
-  add_significance_stars(pattern = "{p.value}{stars}",
-                         hide_ci = FALSE, hide_p = FALSE)
-
-mod4tbl
-```
-
-This model shows that older individuals are significantly less likely to experience suicidal thoughts, plans or attempts, with each higher age category decreasing the risk of suicidality by around 21% (p \< 0.001). Women are around 20% more likely to experience suicidal thoughts, plans or attempts than men (p \< 0.001). This model also shows that LGB individuals are approximately twice as likely to experience suicidal thoughts, plans or attempts than non-LGB individuals (p \< 0.001). Individuals who have either an alcohol use disorder (p \< 0.001) or a marijuana use disorder (p \< 0.001) are around 1.5 times as likely to also experience suicidal thoughts, plans or attempts. Nicotine dependence is not significantly associated with the likelihood of suicidality in this model.
-
-Hypothesis 4 is not supported by this model. Individuals with substance use disorders do not significantly differ in their suicidality based on sexual orientation.
+Hypothesis 3 is not supported by this model. Individuals with substance use disorders do not significantly differ in their suicidality based on sexual orientation. This is likely due to the fact that heterosexual/non-LGB people make up the vast majority of the sample.
 
 ## **Diagnostics/Model Evaluation**
 
@@ -1630,14 +2610,14 @@ Since the Variance Inflation Factor is between 1 and 5 for each of the predictor
 pR2(mod3)
 ```
 
-A McFadden’s R-squared value of 0.2855 indicates that Model 3 explains about 28.55% of the variation in the outcome variable.
+A McFadden’s R-squared value of 0.3011 indicates that Model 3 explains about 30.11% of the variation in the outcome variable.
 
 #### **Accuracy**
 
 ```{r}
 #predict probabilities
 pred_probs3 <- predict(mod3, 
-                       newdf3 = select(new_df, -psych_distress_30),
+                       newdf4 = select(new_df, -suicide),
                        type = "response")
 
 #convert probabilities to binary outcomes
@@ -1648,7 +2628,7 @@ pred_outcome3 <- factor(pred_outcome3,
                         levels = c(0, 1))
 
 #create confusion matrix
-tab3 = table(new_df$psych_distress_30, pred_outcome3,
+tab3 = table(new_df$suicide, pred_outcome3,
             dnn = c("observed", "predicted"))
 
 tab3
@@ -1656,10 +2636,10 @@ tab3
 
 ```{r}
 #calculate accuracy
-(35216 + 1445) / (35216 + 2971 + 757 + 1445)
+(36683 + 904) / (36683 + 2097 + 705 + 904)
 ```
 
-Model 3 has a predictive accuracy of 90.8%.
+Model 3 has a predictive accuracy of 93.1%.
 
 #### **Sensitivity and Specificity**
 
@@ -1677,13 +2657,13 @@ specificity3 <- tab3[1, 1] / (tab3[1, 1] + tab3[1, 2])
 specificity3
 ```
 
-Model 3 has a higher specificity (97.9%) than sensitivity (32.7%), which means that it is good at identifying true negatives (those who have not experienced psychological distress) but it might misclassify true positives (those who have experienced psychological distress).
+Model 3 has a higher specificity (98.1%) than sensitivity (30.1%), which means that it is good at identifying true negatives (those who have not experienced suicidality) but it might misclassify true positives (those who have experienced suicidality).
 
 #### **AUC/ROC Curve**
 
 ```{r, fig.alt = "A Receiver Operating Characteristic (ROC) curve graph, showing the performance of Model 3 across different thresholds, with the Area Under the Curve (AUC) as a summary metric."}
 #the closer the AUC to 1, the better the model fits!
-roc3 <- roc(psych_distress_30 ~ fitted(mod3),
+roc3 <- roc(suicide ~ fitted(mod3),
             data = new_df)
 
 ggroc(roc3, legacy.axes = TRUE) +
@@ -1695,90 +2675,7 @@ ggroc(roc3, legacy.axes = TRUE) +
   )
 ```
 
-Model 3 has an AUC of 0.85, which indicates that it is fairly reliable and is performing very well in terms of distinguishing between those who have and have not experienced psychological distress in the past month.
-
-### **Model 4**
-
-#### **Multicollinearity**
-
-```{r}
-#check multicollinearity with variance inflation factors (VIF)- should be below 5
-vif(mod4)
-```
-
-Since the Variance Inflation Factor is between 1 and 5 for each of the predictor variables, there is no multicollinearity detected in Model 4.
-
-#### **Pseudo R-Squared**
-
-```{r}
-#McFadden's R^2 - values closer to 1 mean better predictive power
-pR2(mod4)
-```
-
-A McFadden’s R-squared value of 0.3011 indicates that Model 4 explains about 30.11% of the variation in the outcome variable.
-
-#### **Accuracy**
-
-```{r}
-#predict probabilities
-pred_probs4 <- predict(mod4, 
-                       newdf4 = select(new_df, -suicide),
-                       type = "response")
-
-#convert probabilities to binary outcomes
-pred_outcome4 <- ifelse(pred_probs4 > 0.5, 1, 0)
-
-#transform predictions into factor
-pred_outcome4 <- factor(pred_outcome4,
-                        levels = c(0, 1))
-
-#create confusion matrix
-tab4 = table(new_df$suicide, pred_outcome4,
-            dnn = c("observed", "predicted"))
-
-tab4
-```
-
-```{r}
-#calculate accuracy
-(36683 + 904) / (36683 + 2097 + 705 + 904)
-```
-
-Model 4 has a predictive accuracy of 93.1%.
-
-#### **Sensitivity and Specificity**
-
-```{r}
-#sensitivity
-sensitivity4 <- tab4[2, 2] / (tab4[2, 2] + tab4[2, 1])
-
-sensitivity4
-```
-
-```{r}
-#specificity
-specificity4 <- tab4[1, 1] / (tab4[1, 1] + tab4[1, 2])
-
-specificity4
-```
-
-Model 4 has a higher specificity (98.1%) than sensitivity (30.1%), which means that it is good at identifying true negatives (those who have not experienced suicidality) but it might misclassify true positives (those who have experienced suicidality).
-
-#### **AUC/ROC Curve**
-
-```{r, fig.alt = "A Receiver Operating Characteristic (ROC) curve graph, showing the performance of Model 4 across different thresholds, with the Area Under the Curve (AUC) as a summary metric."}
-#the closer the AUC to 1, the better the model fits!
-roc4 <- roc(suicide ~ fitted(mod4),
-            data = new_df)
-
-ggroc(roc4, legacy.axes = TRUE) +
-  labs(title = paste0("AUC = ", round(roc4$auc, 2))) +
-  theme_minimal() +
-  theme(
-    panel.grid.major = element_line(color = "gray", size = 0.5),
-    panel.grid.minor = element_line(color = "gray", size = 0.25)
-  )
-```
+Model 3 has an AUC of 0.84, which indicates that it is fairly reliable and is performing very well in terms of distinguishing between those who have and have not experienced suicidality in the past year.
 
 ## **Discussion**
 
@@ -1796,7 +2693,7 @@ Older individuals are less likely to experience suicidality, with each higher ag
 
 ## **Conclusion**
 
-The hypotheses surrounding the relationship between substance use (alcohol, cigarettes, and marijuana) and mental health outcomes for LGB individuals were not supported. Previous research has shown that there are links between LGBT people and substance use disorders, but that was not the case in this sample. There were some limitations in this study that may have caused this disparity. Since the study predominantly includes non-LGB individuals and LGB individuals only made up around 14.4% of the sample, it may not fully capture the unique mental health challenges faced by sexual minorities. In future research, it might be smart to focus on a sample consisting of equal parts LGBTQ+ and cisgender heterosexual individuals by oversampling LGBTQ+ people. Another issue with this study was that it did not include information on transgender or gender diverse individuals. Future studies should try to include this population in research, since they tend to experience even worse mental health outcomes than the lesbian, gay and bisexual populations due to even higher stigma and discrimination (Hajek et al., 2023).
+The hypotheses surrounding the relationship between substance use (alcohol, cigarettes, and marijuana) and mental health outcomes for LGB individuals were not supported. Previous research has shown that there are links between LGBT people and substance use disorders, but that was not the case in this sample. There were some limitations in this study that may have caused this disparity. Since the study predominantly includes non-LGB individuals and LGB individuals only made up around 14.4% of the sample, it may not fully capture the unique mental health challenges faced by sexual minorities. In future research, it might be smart to focus on a sample consisting of equal parts LGBTQ+ and cisgender heterosexual individuals by oversampling LGBTQ+ people. Another issue with this study was that it did not include information on transgender or gender diverse individuals. Future studies should try to include this population in research, since they tend to experience even worse mental health outcomes than the lesbian, gay and bisexual populations due to facing even higher stigma and discrimination (Hajek et al., 2023).
 
 ## **Bibliography**
 
