@@ -7,6 +7,8 @@ format:
 editor: visual
 ---
 
+
+
 ## **Introduction and Literature Review**
 
 In 2022, there was 1 suicide death every 11 minutes (CDC, 2024). This is a staggering number, and doesn’t even account for the amount of people with serious thoughts or plans of suicide. According to the National Survey on Drug Use and Health in 2020, 4.9% of adults had serious thoughts of suicide in the past year, while 1.3% had made a suicide plan and 0.5% actually attempted suicide (SAMHSA, 2021). Women are significantly more likely to report past suicide attempts than men (Kelly et al., 2020) and young adults aged 18-25 are the most common group to be experiencing serious thoughts of suicide, plans, or attempts (SAMHSA, 2021; Piscopo & Lipari, 2016). Gay and bisexual men are also 4 times as likely to attempt suicide throughout their lifetime compared to heterosexual men, and lesbian and bisexual women are 2 times as likely to do so compared to heterosexual women. Depression and alcohol or other substance use disorders are also 1.5 times higher risk for lesbian, gay and bisexual people compared to heterosexual people (King et al., 2008). 
@@ -26,6 +28,8 @@ Understanding how mental health influences substance use specifically in LGB ind
 ## **Hypotheses**
 
 1\. LGB individuals who engage in regular substance use (alcohol, cigarettes, and marijuana) in the past month are more likely to have experienced psychological distress in the past month compared to non-LGB individuals.
+
+
 
 ```{r}
 #| message: false
@@ -81,9 +85,13 @@ Suicidality -> "Regular Substance Use (DV)"
 plot(dag1)
 ```
 
+
+
 This hypothesis aims to explore the relationship between psychological distress in the past month (IV) and regular substance use in the past month (DV), which is hypothesized to be moderated by sexual orientation. Potential confounding variables that will need to be controlled for during regression are whether or not the respondent has experienced a major depressive episode in the past year, whether or not the respondent has had suicidal thoughts, plans, or attempts in the past year, as well as sex and age.
 
 2\. LGB individuals who engage in regular substance use (alcohol, cigarette, and marijuana) are more likely to report experiencing a past year major depressive episode compared to non-LGB individuals.
+
+
 
 ```{r, fig.alt = "Directed acyclic graph showing the relationship between the independent variable- major depressive episode and the dependent variable- regular substance use. This relationship is hypothesized to be moderated by sexual orientaton."}
 dag2 <- dagitty(
@@ -111,9 +119,13 @@ Suicidality -> "Regular Substance Use (DV)"}'
 plot(dag2)
 ```
 
+
+
 This hypothesis aims to explore the relationship between experiencing a major depressive episode in the past year (IV) and regular substance use in the past month (DV), which is hypothesized to be moderated by sexual orientation. Potential confounding variables that will need to be controlled for during regression are whether or not the respondent has experienced psychological distress in the past month, whether or not the respondent has had suicidal thoughts, plans, or attempts in the past year, as well as sex and age.
 
 3.  LGB individuals who have had a substance use disorder in the past year are more likely to have experienced suicidal thoughts, plans, and/or attempts in the past year compared to non-LGB individuals.
+
+
 
 ```{r, fig.alt = "Directed acyclic graph showing the relationship between the independent variable- suicidality and the dependent variable- substance use disorder. This relationship is hypothesized to be moderated by sexual orientaton."}
 dag3 <- dagitty(
@@ -142,6 +154,8 @@ plot(dag3)
 
 ```
 
+
+
 This hypothesis aims to explore the relationship between experiencing suicidal thoughts, plans, or attempts in the past year (IV) and having a substance use disorder in the past year (DV), which is hypothesized to be moderated by sexual orientation. Potential confounding variables that will need to be controlled for during regression are whether or not the respondent has experienced a major depressive episode in the past year, whether or not the respondent has experienced psychological distress in the past month, as well as sex and age.
 
 These hypotheses seem to be supported by previous literature in that people who have the poorest health outcomes tend to engage in regular substance use or have a substance use disorder. This project aims to expand on previous literature in the field by adding sexual orientation as a new lens to view these relationships with.
@@ -154,6 +168,8 @@ The data found in this project is from the [2023 National Survey on Drug Use and
 
 First, we need to read in the data and keep only certain columns of interest. We will also rename the columns to make them more readable/understandable.
 
+
+
 ```{r}
 path = file.path("~/GitHub/Effects/original_nsduh_data/NSDUH_2023.sav")
 
@@ -164,7 +180,11 @@ colnames(df) <- c('sex_orient', 'sex', 'age', 'alc30use', 'mj30use', 'alcdisorde
 head(df)
 ```
 
+
+
 Next, we will remove any observations from children since we want to focus on adults. We will also remove observations where people responded “don’t know”, “refused”, or left the answer blank. This will be done by going through each individual column and removing observations corresponding with certain values.
+
+
 
 ```{r}
 #sex_orient
@@ -266,7 +286,11 @@ new_df %>%
   summarise(frequency = n()) %>%   arrange(desc(frequency))
 ```
 
+
+
 Next, I will create new columns with the values of categorical variables for easier plotting later on.
+
+
 
 ```{r}
 #sex_orient2
@@ -386,7 +410,11 @@ new_df <- new_df %>%
                      majordepressive_year == 1 ~ "Yes"))
 ```
 
+
+
 Next, I will change the labels for each of the variables for use later on in tables.
+
+
 
 ```{r}
 new_df = apply_labels(new_df,
@@ -408,25 +436,37 @@ new_df = apply_labels(new_df,
 rm(df)
 ```
 
+
+
 #### **Saving Cleaned Data as Parquet File**
 
 There were some issues when I tried saving this dataframe as a CSV, so instead I saved it as a Parquet file. After doing so, I used an online converter in order to convert the Parquet file to a CSV for easier analysis in Tableau later on.
+
+
 
 ```{r}
 write_parquet(new_df, "clean_nsduh_data.parquet")
 ```
 
+
+
 ### **Descriptive Statistics**
 
 In this section, I will go over all of the variables of interest relating to this project through a brief description of each variable and the possible values as well as some descriptive statistics.
+
+
 
 ```{r}
 dim(new_df)
 ```
 
+
+
 After being cleaned and processed, the new data frame has 24 columns and 40,389 rows.
 
 #### Summary Statistics
+
+
 
 ```{r, results = "asis"}
 tab_df <- new_df %>%
@@ -440,7 +480,11 @@ stargazer(as.data.frame(tab_df), type = "html",
                                "# Days Used Marijuana Past Month"))
 ```
 
+
+
 #### Summary Statistics by Sexual Orientation
+
+
 
 ```{r}
 names(tab_df)[names(tab_df) == "sex_orient2"] <- "Sexual_Orientation"
@@ -449,6 +493,8 @@ labs <- c("# Days Drank Alcohol Past Month", "# Days Used Marijuana Past Month")
 
 st(tab_df, group = 'Sexual_Orientation', group.long = TRUE, labels = labs, out = "kable", title = "Summary Statistics by Sexual Orientation")
 ```
+
+
 
 #### Description of Variables
 
@@ -465,6 +511,8 @@ st(tab_df, group = 'Sexual_Orientation', group.long = TRUE, labels = labs, out =
         -   4 = Other
 
         -   5 = Questioning
+
+
 
 ```{r}
 sexorient_tab <- new_df %>%  
@@ -509,6 +557,8 @@ sexorient_count %>%
       y = "Count")
 ```
 
+
+
 The most common sexual orientation among respondents was heterosexual (85.6%) followed by bisexual (7.5%) and gay/lesbian (3%). The lack of LGB respondents in this project is a severe limitation.
 
 2.  **sex**- sex at birth of respondent -
@@ -518,6 +568,8 @@ The most common sexual orientation among respondents was heterosexual (85.6%) fo
         -   1 = Female
 
         -   2 = Male
+
+
 
 ```{r}
 sex_tab <- new_df %>%  
@@ -558,6 +610,8 @@ sex_count %>%
       y = "Count")
 ```
 
+
+
 55% of respondents were born male, while 45% of respondents were born female.
 
 3.  **age**- age category -
@@ -573,6 +627,8 @@ sex_count %>%
         -   5 = 50-64 years old
 
         -   6 = 65 or older
+
+
 
 ```{r}
 age_tab <- new_df %>%  
@@ -616,6 +672,8 @@ age_count %>%
       y = "Count")
 ```
 
+
+
 The majority of respondents fell into the 18-25 (29.7%) and 35-49 (27.5%) age categories. People who were 26-34 made up 20.4% of the data. The least represented age groups in this data frame are from the 50-64 and 65+ age groups, making up 11.1% and 11.3% respectively.
 
 4.  **alc30use**- number of days respondent had at least one drink of alcohol in the past 30 days -
@@ -623,6 +681,8 @@ The majority of respondents fell into the 18-25 (29.7%) and 35-49 (27.5%) age ca
     -   Values
 
         -   0-30
+
+
 
 ```{r, fig.alt= "A histogram with the number of days respondents had at least one drink of alcohol in the past month on the x-axis and frequency on the y-axis. Plot illustrates the distribution of the data in terms of frequency of drinking at least one drink in the past month."}
 
@@ -635,12 +695,16 @@ ggplot(new_df, aes(x = alc30use)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+
+
 The mean number of days respondents had at least one in the past month was 4.1. The most frequent response was that respondents had not had any drinks in the past month.
 
 5.  **alcfreq-** non-frequent (drank less than or equal to 4 days in past month) vs frequent (drank more than 4 days in past month) drinkers
     -   Values
         -   0 = Non-Frequent Drinker
         -   1 = Frequent Drinker
+
+
 
 ```{r}
 alcfreq_tab <- new_df %>%  
@@ -681,11 +745,15 @@ alcfreq_count %>%
       y = "Count")
 ```
 
+
+
 73% of respondents drank less than 4 drinks in the past month and would be considered non-frequent drinkers, while 27% drank 4 or more drinks in the past month and would be considered frequent drinkers.
 
 6.  **mj30use**- number of days respondent used marijuana/cannabis in any form in the past 30 days - Values
 
     -   0-30
+
+
 
 ```{r, fig.alt= "A histogram with the number of days respondents used marijuana in the past month on the x-axis and frequency on the y-axis. Plot illustrates the distribution of the data in terms of frequency of marijuana use."}
 
@@ -698,12 +766,16 @@ ggplot(new_df, aes(x = mj30use)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+
+
 The mean number of days a respondent used marijuana in the past 30 days was around 3.3. The most frequent response from respondents was that they had never used marijuana in the past month.
 
 7.  **mjfreq**- non-frequent (used marijuana less than or equal to 4 days in past month) vs frequent (used marijuana more than 4 days in past month) marijuana user
     -   Values
         -   0 = Non-Frequent Marijuana User
         -   1 = Frequent Marijuana User
+
+
 
 ```{r}
 mjfreq_tab <- new_df %>%  
@@ -745,6 +817,8 @@ mjfreq_count %>%
 
 ```
 
+
+
 85.5% of respondents used marijuana less than 4 times in the past month and would be considered non-frequent marijuana users, while 14.5% used marijuana 4 or more times in the past month and would be considered frequent marijuana users.
 
 8.  **alcdisorder_year**- whether respondents fits DSM-5 criteria for alcohol use disorder -
@@ -754,6 +828,8 @@ mjfreq_count %>%
         -   0 = No
 
         -   1 = Yes
+
+
 
 ```{r}
 alcdisorder_tab <- new_df %>%  
@@ -795,6 +871,8 @@ alcdisorder_count %>%
       y = "Count")
 ```
 
+
+
 87.2% of respondents did not meet the DSM-5 criteria for having alcohol use disorder in the past year. Only 12.8% of respondents did meet the criteria for alcohol use disorder.
 
 9.  **mjdisorder_year**- whether respondent fits criteria for marijuana use disorder -
@@ -804,6 +882,8 @@ alcdisorder_count %>%
         -   0 = No
 
         -   1 = Yes
+
+
 
 ```{r}
 mjdisorder_tab <- new_df %>%  
@@ -845,6 +925,8 @@ mjdisorder_count %>%
       y = "Count")
 ```
 
+
+
 90.3% of respondents did not meet the DSM-5 criteria for having marijuana use disorder in the past year. Only 9.7% of respondents did meet the criteria for marijuana use disorder.
 
 10. **psych_distress_30**- past month serious psychological distress indicator (recoded based on answers to K6 questionnaire)
@@ -854,6 +936,8 @@ mjdisorder_count %>%
         -   0 = No
 
         -   1 = Yes
+
+
 
 ```{r}
 psychdistress_tab <- new_df %>%  
@@ -895,6 +979,8 @@ psychdistress_count %>%
       y = "Count")
 ```
 
+
+
 89% of respondents have not experienced serious psychological distress in the past 30 days, while 11% have.
 
 11. **suicide**- recoded adult past year thoughts, plans, OR attempts of suicide -
@@ -904,6 +990,8 @@ psychdistress_count %>%
         -   0 = No
 
         -   1 = Yes, one or more (thoughts, plans, attempts, or some combination)
+
+
 
 ```{r}
 suicide_tab <- new_df %>%  
@@ -945,6 +1033,8 @@ suicide_count %>%
       y = "Count")
 ```
 
+
+
 92.5% of respondents did not have suicidal thoughts, plans, and/or attempts in the past 30 days while 7.5% experienced at least one of these.
 
 12. **majordepressive_year**- past year major depressive episode -
@@ -954,6 +1044,8 @@ suicide_count %>%
         -   0 = No
 
         -   1 = Yes
+
+
 
 ```{r}
 mde_tab <- new_df %>%  
@@ -995,6 +1087,8 @@ mde_count %>%
       y = "Count")
 ```
 
+
+
 88.2% of respondents did not experience a major depressive episode in the past year, while 11.8% did experience a major depressive episode.
 
 ## **Exploring Relationships Within the Data**
@@ -1002,6 +1096,8 @@ mde_count %>%
 ### **Alcohol Use Disorder by Sex, Age, and Sexual Orientation**
 
 #### **Sex and Alcohol Use Disorder**
+
+
 
 ```{r, fig.alt = "A bar plot with alcohol use disorder (filtering by responses with yes) on the x-axis and count on the y-axis. There are two bars that represent the sex variable (measured as either male or female). Plot illustrates the differences in sex among those with an alcohol use disorder."}
 
@@ -1030,9 +1126,13 @@ sex_alcdisorder_count %>%
       y = "Count")
 ```
 
+
+
 Women make up 51.1% of those with an alcohol use disorder, while men make up 48.9%.
 
 #### **Age and Alcohol Use Disorder**
+
+
 
 ```{r, fig.alt = "A bar plot with alcohol use disorder (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the age variable (measured as 18-25, 26-34, 35-49, 50-64, and 65+ years old). Plot illustrates the differences in age among those with an alcohol use disorder."}
 
@@ -1064,11 +1164,15 @@ age_alcdisorder_count %>%
       y = "Count")
 ```
 
+
+
 The 18-25 age category had the largest amount of people with an alcohol use disorder (35.4%), followed by the 35-49 (27.9%) and 26-34 (24.3%) age categories. The least likely age group to have an alcohol use disorder was those 65 years and older (4.4%).
 
 #### **Sexual Orientation and Alcohol Use Disorder**
 
 ##### Alcohol Use Disorder in Heterosexual People
+
+
 
 ```{r, fig.alt = "A bar plot with alcohol use disorder (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include heterosexual respondents. Plot illustrates the differences in alcohol use disorder among heterosexual people."}
 
@@ -1095,9 +1199,13 @@ heterosexual_alcdisorder_count %>%
       y = "Count")
 ```
 
+
+
 Among heterosexual respondents, only 12% had an alcohol use disorder in the past year compared to 88% that did not.
 
 ##### Alcohol Use Disorder in Bisexual People
+
+
 
 ```{r, fig.alt = "A bar plot with alcohol use disorder (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include bisexual respondents. Plot illustrates the differences in alcohol use disorder among bisexual people."}
 
@@ -1124,9 +1232,13 @@ bisexual_alcdisorder_count %>%
       y = "Count")
 ```
 
+
+
 Among bisexual respondents, only 19.8% had an alcohol use disorder in the past year compared to 80.2% that did not.
 
 ##### Alcohol Use Disorder in Gay/Lesbian People
+
+
 
 ```{r, fig.alt = "A bar plot with alcohol use disorder (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include gay/lesbian respondents. Plot illustrates the differences in alcohol use disorder among gay/lesbian people"}
 
@@ -1152,11 +1264,15 @@ lg_alcdisorder_count %>%
       y = "Count")
 ```
 
+
+
 Among gay and lesbian respondents, only 17.4% had an alcohol use disorder in the past year compared to 82.6% that did not.
 
 ### **Marijuana Use Disorder by Sex, Age, and Sexual Orientation**
 
 #### **Sex and Marijuana Use Disorder**
+
+
 
 ```{r, fig.alt = "A bar plot with marijuana use disorder (filtering by responses with yes) on the x-axis and count on the y-axis. There are two bars that represent the sex variable (measured as either male or female). Plot illustrates the differences in sex among those with a marijuana use disorder."}
 
@@ -1185,9 +1301,13 @@ sex_mjdisorder_count %>%
       y = "Count")
 ```
 
+
+
 Women make up 53% of those with a marijuana use disorder, while men make up 47%.
 
 #### **Age and Marijuana Use Disorder**
+
+
 
 ```{r, fig.alt = "A bar plot with marijuana use disorder (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the age variable (measured as 18-25, 26-34, 35-49, 50-64, and 65+ years old). Plot illustrates the differences in age among those with a marijuana use disorder."}
 
@@ -1219,11 +1339,15 @@ age_mjdisorder_count %>%
       y = "Count")
 ```
 
+
+
 The 18-25 age category had the largest amount of people with a marijuana use disorder (50.1%), followed by the 26-34 (23.6%) and 35-49 (20.8%) age categories. The least likely age group to have a marijuana use disorder was those 65 years and older (1.5%).
 
 #### **Sexual Orientation and Marijuana Use Disorder**
 
 ##### Marijuana Use Disorder in Heterosexual People
+
+
 
 ```{r, fig.alt = "A bar plot with marijuana use disorder (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include heterosexual respondents. Plot illustrates the differences in marijuana use disorder among heterosexual people."}
 
@@ -1251,9 +1375,13 @@ heterosexual_mjdisorder_count %>%
 
 ```
 
+
+
 Among heterosexual respondents, only 7.9% had a marijuana use disorder in the past year compared to 92.1% that did not.
 
 ##### Marijuana Use Disorder in Bisexual People
+
+
 
 ```{r, fig.alt = "A bar plot with marijuana use disorder (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include bisexual respondents. Plot illustrates the differences in marijuana use disorder among bisexual people."}
 
@@ -1280,9 +1408,13 @@ bisexual_mjdisorder_count %>%
       y = "Count")
 ```
 
+
+
 Among bisexual respondents, only 23.8% had a marijuana use disorder in the past year compared to 76.2% that did not.
 
 ##### Marijuana Use Disorder in Gay/Lesbian People
+
+
 
 ```{r, fig.alt = "A bar plot with marijuana use disorder (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include gay/lesbian respondents. Plot illustrates the differences in marijuana use disorder among gay/lesbian people"}
 
@@ -1308,11 +1440,15 @@ lg_mjdisorder_count %>%
       y = "Count")
 ```
 
+
+
 Among gay and lesbian respondents, only 16.2% had a marijuana use disorder in the past year compared to 83.8% that did not.
 
 ### **Psychological Distress by Sex, Age, and Sexual Orientation**
 
 #### **Sex and Psychological Distress**
+
+
 
 ```{r, fig.alt = "A bar plot with psychological distress in the past month (filtering by responses with yes) on the x-axis and count on the y-axis. There are two bars that represent the sex variable (measured as either male or female). Plot illustrates the differences in sex among those who have experienced severe psychological distress in the past month."}
 
@@ -1341,9 +1477,13 @@ sex_psychdistress_count %>%
       y = "Count")
 ```
 
+
+
 Men were much more likely (63.3%) than women (36.7%) to have experienced severe psychological distress in the past month.
 
 #### **Age and Psychological Distress**
+
+
 
 ```{r, fig.alt = "A bar plot with psychological distress in the past month (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the age variable (measured as 18-25, 26-34, 35-49, 50-64, and 65+ years old). Plot illustrates the differences in age among those who have experienced severe psychological distress in the past month."}
 
@@ -1375,11 +1515,15 @@ age_psychdistress_count %>%
       y = "Count")
 ```
 
+
+
 The 18-25 age category was the most common to have experienced severe psychological distress in the past month (50.1%), followed by the 26-34 (23.6%)and 35-49 (20%) age categories. The least likely age group to have experienced severe psychological distress in the past month was those 65 years and older (1.9%).
 
 #### **Sexual Orientation and Psychological Distress**
 
 ##### Psychological Distress in Heterosexual People
+
+
 
 ```{r, fig.alt = "A bar plot with psychological distress in the past month (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include heterosexual respondents. Plot illustrates the differences among heterosexual people in experiencing recent psychological distress."}
 
@@ -1405,9 +1549,13 @@ heterosexual_psychdistress_count %>%
       y = "Count")
 ```
 
+
+
 Among heterosexual respondents, only 8.2% experienced severe psychological distress in the past month compared to 91.8% that did not.
 
 ##### Psychological Distress in Bisexual People
+
+
 
 ```{r, fig.alt = "A bar plot with psychological distress in the past month (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include bisexual respondents. Plot illustrates the differences among bisexual people in experiencing recent psychological distress."}
 
@@ -1433,9 +1581,13 @@ bisexual_psychdistress_count %>%
       y = "Count")
 ```
 
+
+
 Among bisexual respondents, only 28.8% experienced severe psychological distress in the past month compared to 71.2% that did not.
 
 ##### Psychological Distress in Gay/Lesbian People
+
+
 
 ```{r, fig.alt = "A bar plot with psychological distress in the past month (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include gay/lesbian respondents. Plot illustrates the differences among gay/lesbian people in experiencing recent psychological distress."}
 
@@ -1461,11 +1613,15 @@ lg_psychdistress_count %>%
       y = "Count")
 ```
 
+
+
 Among gay and lesbian respondents, only 19.9% experienced severe psychological distress in the past month compared to 80.1% that did not.
 
 ### **Suicidality by Sex, Age, and Sexual Orientation**
 
 #### **Sex and Suicidality**
+
+
 
 ```{r, fig.alt = "A bar plot with suicidal thoughts, plans, and/or attempts in the past year (filtering by responses with yes) on the x-axis and count on the y-axis. There are two bars that represent the sex variable (measured as either male or female). Plot illustrates the differences in sex among those who have experienced suicidal thoughts, plans, and/or attempts in the past year."}
 
@@ -1494,9 +1650,13 @@ sex_suicide_count %>%
       y = "Count")
 ```
 
+
+
 Men were more likely to experience suicidal thoughts, plans, and/or attempts in the past year (59.3%) compared to women (40.7%).
 
 #### **Age and Suicidality**
+
+
 
 ```{r, fig.alt = "A bar plot with suicidal thoughts, plans, and/or attempts in the past year (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the age variable (measured as 18-25, 26-34, 35-49, 50-64, and 65+ years old). Plot illustrates the differences in age among those who have experienced suicidal thoughts, plans, and/or attempts in the past year."}
 
@@ -1528,11 +1688,15 @@ age_suicide_count %>%
       y = "Count")
 ```
 
+
+
 The 18-25 age category was the most common to have experienced suicidal thoughts, plans and/or attempts in the past year (52.2%), followed by the 26-34 (21.7%) and 35-49 (19.1%) age categories. The least likely age group to have experienced suicidality in the past year was those 65 years and older (2.6%).
 
 #### **Sexual Orientation and Suicidality**
 
 ##### Suicidality in Heterosexual People
+
+
 
 ```{r, fig.alt = "A bar plot with suicidality in the past year (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include heterosexual respondents. Plot illustrates the differences among heterosexual people in experiencing suicidal thoughts, plans, and/or attempts in the past year."}
 
@@ -1558,9 +1722,13 @@ heterosexual_suicide_count %>%
       y = "Count")
 ```
 
+
+
 Among heterosexual respondents, only 5.2% experienced suicidal thoughts, plans, and/or attempts in the past year compared to 94.8% that did not.
 
 ##### Suicidality in Bisexual People
+
+
 
 ```{r, fig.alt = "A bar plot with suicidality in the past year (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include bisexual respondents. Plot illustrates the differences among bisexual people in experiencing suicidal thoughts, plans, and/or attempts in the past year."}
 
@@ -1586,9 +1754,13 @@ bisexual_suicide_count %>%
       y = "Count")
 ```
 
+
+
 Among bisexual respondents, only 21.9% experienced suicidal thoughts, plans, and/or attempts in the past year compared to 78.1% that did not.
 
 ##### Suicidality in Gay/Lesbian People
+
+
 
 ```{r, fig.alt = "A bar plot with suicidality in the past year (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include gay/lesbian respondents. Plot illustrates the differences among gay/lesbian people in experiencing suicidal thoughts, plans, and/or attempts in the past year."}
 
@@ -1614,11 +1786,15 @@ lg_suicide_count %>%
       y = "Count")
 ```
 
+
+
 Among gay and lesbian respondents, only 15.3% experienced suicidal thoughts, plans, and/or attempts in the past year compared to 84.7% that did not.
 
 ### **Major Depressive Episode by Sex, Age, and Sexual Orientation**
 
 #### **Sex and Major Depressive Episode**
+
+
 
 ```{r, fig.alt = "A bar plot with major depressive episode in the past year (filtering by responses with yes) on the x-axis and count on the y-axis. There are two bars that represent the sex variable (measured as either male or female). Plot illustrates the differences in sex among those who have experienced a major depressive episode in the past year."}
 
@@ -1647,9 +1823,13 @@ sex_mde_count %>%
       y = "Count")
 ```
 
+
+
 Men were much more likely (66.6%) than women (33.4%) to have experienced a major depressive episode in the past year.
 
 #### Age and Major Depressive Episode
+
+
 
 ```{r, fig.alt = "A bar plot with major depressive episode in the past year (filtering by responses with yes) on the x-axis and count on the y-axis. There are five bars that represent the age variable (measured as 18-25, 26-34, 35-49, 50-64, and 65+ years old). Plot illustrates the differences in age among those who have experienced a major depressive episode in the past year."}
 
@@ -1681,11 +1861,15 @@ age_mde_count %>%
       y = "Count")
 ```
 
+
+
 The 18-25 age category was the most common to have experienced a major depressive episode in the past year (45.1%), followed by the 26-34 (23.2%) and 35-49 (22.6%) age categories. The least likely age group to have experienced a major depressive episode in the past year was those 65 years and older (3.2%).
 
 #### **Sexual Orientation and Major Depressive Episode**
 
 ##### Major Depressive Episodes in Heterosexual People
+
+
 
 ```{r, fig.alt = "A bar plot with major depressive episode in the past year (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include heterosexual respondents. Plot illustrates the differences among heterosexual people in experiencing a major depressive episode in the past year."}
 
@@ -1711,9 +1895,13 @@ heterosexual_mde_count %>%
       y = "Count")
 ```
 
+
+
 Among heterosexual respondents, only 8.8% experienced suicidal thoughts, plans, and/or attempts in the past year compared to 91.2% that did not.
 
 ##### Major Depressive Episodes in Bisexual People
+
+
 
 ```{r, fig.alt = "A bar plot with major depressive episode in the past year (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include bisexual respondents. Plot illustrates the differences among bisexual people in experiencing a major depressive episode in the past year."}
 
@@ -1739,9 +1927,13 @@ bisexual_mde_count %>%
       y = "Count")
 ```
 
+
+
 Among bisexual respondents, only 31.2% experienced suicidal thoughts, plans, and/or attempts in the past year compared to 68.8% that did not.
 
 ##### Major Depressive Episodes in Gay and Lesbian People
+
+
 
 ```{r, fig.alt = "A bar plot with major depressive episode in the past year (measured as yes or no) on the x-axis and count on the y-axis. Above each bar in the plot is the count and percentage. The data for this graph is filtered to only include gay/lesbian respondents. Plot illustrates the differences among gay/lesbian people in experiencing a major depressive episode in the past year."}
 
@@ -1767,23 +1959,33 @@ lg_mde_count %>%
       y = "Count")
 ```
 
+
+
 Among gay and lesbian respondents, only 18.6% experienced suicidal thoughts, plans, and/or attempts in the past year compared to 81.4% that did not.
 
 ### **Substance Use Disorders and Suicidality**
 
 #### **Alcohol Use Disorder and Suicidality**
 
+
+
 ```{r}
 tetrachoric(select(new_df, alcdisorder_year, suicide))
 ```
+
+
 
 There is a weak positive correlation (r = 0.27) between alcohol use disorder and suicidal thoughts, plans, and/or attempts in the past year.
 
 #### **Marijuana Use Disorder and Suicidality**
 
+
+
 ```{r}
 tetrachoric(select(new_df, mjdisorder_year, suicide))
 ```
+
+
 
 There is a weak positive correlation (r = 0.38) between marijuana use disorder and suicidal thoughts, plans, and/or attempts in the past year.
 
@@ -1791,17 +1993,25 @@ There is a weak positive correlation (r = 0.38) between marijuana use disorder a
 
 #### **Alcohol Use Disorder and Major Depressive Episode**
 
+
+
 ```{r}
 tetrachoric(select(new_df, alcdisorder_year, majordepressive_year))
 ```
+
+
 
 There is a weak positive correlation (r = 0.26) between alcohol use disorder and having a major depressive episode in the past year.
 
 #### **Marijuana Use Disorder and Major Depressive Episode**
 
+
+
 ```{r}
 tetrachoric(select(new_df, mjdisorder_year, majordepressive_year))
 ```
+
+
 
 There is a weak positive correlation (r = 0.35) between marijuana use disorder and having a major depressive episode in the past year.
 
@@ -1810,6 +2020,8 @@ There is a weak positive correlation (r = 0.35) between marijuana use disorder a
 ### **Model 1**
 
 Hypothesis 1: LGB individuals who engage in regular substance use (alcohol and marijuana) in the past month are more likely to have experienced psychological distress in the past month compared to non-LGB individuals.
+
+
 
 ```{r}
 #predicted probability- predicting psychological distress based on LGB status and frequency of alcohol and marijuana use
@@ -2162,6 +2374,8 @@ mod1tbl <- tbl_regression(mod1, exponentiate = TRUE) %>%
 mod1tbl
 ```
 
+
+
 This model shows that individuals who have experienced a major depressive episode in the past year are nearly 8 times as likely to have experienced severe psychological distress in the past month compared to individuals without such a history (p \< 0.05). Individuals who have had suicidal thoughts, plans, and/or attempts in the past year are around 5.5 times more likely to have experienced psychological distress in the past month compared to individuals without a history of suicidality (p \< 0.05).
 
 Men compared to women are around 1.25 times as likely to have experienced severe psychological distress in the past month (p \< 0.05). Older individuals are less likely to experience psychological distress, with each higher age category being associated with around 29% lower odds of severe psychological distress taking place (p \< 0.05). This model shows that, on average, LGB individuals are almost twice as likely to experience psychological distress compared to non-LGB individuals (p \< 0.001).
@@ -2175,6 +2389,8 @@ Hypothesis 1 is not supported with these results. The relationships between alco
 ### **Model 2**
 
 Hypothesis 2: LGB individuals who engage in regular substance use (alcohol and marijuana) are more likely to report experiencing a past year major depressive episode compared to non-LGB individuals.
+
+
 
 ```{r}
 #predicted probability- predicting major depressive episodes based on LGB status and frequent substance use
@@ -2406,6 +2622,8 @@ mod2tbl <- tbl_regression(mod2, exponentiate = TRUE) %>%
 mod2tbl
 ```
 
+
+
 This model shows that individuals with suicidality in the past year are 12 times as likely to also have experienced a major depressive episode in the past year. Model 2 shows that older individuals are less likely to experience major depressive episodes, with each higher age category associated with approximately 19% lower odds of a MDE (p \< 0.05). Men compared to women are around 1.68 times as likely to have experienced a MDE in the past year (p \< 0.05).
 
 This model also shows that LGB individuals are around 2.5 times as likely to experience a major depressive episode compared to non-LGB individuals (p \< 0.05).
@@ -2419,6 +2637,8 @@ Hypothesis 2 is not supported by these results. There is no significant differen
 ### **Model 3**
 
 Hypothesis 3: LGB individuals who have had a substance use disorder (alcohol or marijuana) in the past year are more likely to have experienced suicidal thoughts, plans, and/or attempts in the past year compared to non-LGB individuals.
+
+
 
 ```{r}
 #predicted probability- predicting major depressive episodes based on LGB status and substance use disorders
@@ -2752,6 +2972,8 @@ mod3tbl <- tbl_regression(mod3, exponentiate = TRUE) %>%
 mod3tbl
 ```
 
+
+
 This model shows that older individuals are significantly less likely to experience suicidal thoughts, plans or attempts, with each higher age category decreasing the risk of suicidality by around 25% (p \< 0.05). Women are around 15% more likely to experience suicidal thoughts, plans or attempts than men (p \< 0.05). This model also shows that LGB individuals are approximately 2.25 times as likely to experience suicidal thoughts, plans or attempts than non-LGB individuals (p \< 0.05). Individuals who have either an alcohol use disorder (p \< 0.05) or a marijuana use disorder (p \< 0.05) are respectively around 1.6 and 1.9 times as likely to also experience suicidal thoughts, plans or attempts.
 
 The predicted probability of experiencing suicidality using the observed case approach for LGB individuals who have no substance use disorders is 89.5% higher than non-LGB individuals without substance use disorders. LGB individuals with both alcohol and marijuana use disorders have a 64.56% higher likelihood of experiencing suicidality compared to their non-LGB counterparts with both substance use disorders. LGB people who have one substance use disorder are around 75% as likely to experience suicidality compared to their non-LGB counterparts with one substance use disorder. LGB people with both an alcohol and a marijuana use disorder are also 104.8% as likely to experience suicidality compared to LGB people without either substance use disorder according to our predictions. The predicted probability plot shown above also depicts LGB people as having a much higher baseline compared to non-LGB people for experiencing suicidal thoughts, plans, and/or attempts regardless of substance use. Similarly to Model 2, these predicted probabilities align with pre-existing research showing that LGBT populations tend to struggle more with their mental health than non-LGBT populations.
@@ -2766,23 +2988,33 @@ Since binary variables are the only types of predictors utilized in these models
 
 #### **Multicollinearity**
 
+
+
 ```{r}
 #check multicollinearity with variance inflation factors (VIF)- should be below 5
 vif(mod1)
 ```
 
+
+
 Since the Variance Inflation Factor is between 1 and 5 for each of the predictor variables, there is no multicollinearity detected in Model 1.
 
 #### **Pseudo R-Squared**
+
+
 
 ```{r}
 #McFadden's R^2 - values closer to 1 mean better predictive power
 pR2(mod1)
 ```
 
+
+
 A McFadden’s R-squared value of 0.2906 indicates that Model 1 explains about 29.06% of the variation in the outcome variable.
 
 #### **Accuracy**
+
+
 
 ```{r}
 #predict probabilities
@@ -2809,9 +3041,13 @@ tab1
 (35572 + 1473) / (744 + 3004 + 35572 + 1473)
 ```
 
+
+
 Model 1 has a predictive accuracy of 90.8%.
 
 #### **Sensitivity and Specificity**
+
+
 
 ```{r}
 #sensitivity
@@ -2827,9 +3063,13 @@ specificity1 <- tab1[1, 1] / (tab1[1, 1] + tab1[1, 2])
 specificity1
 ```
 
+
+
 Model 1 has a higher specificity (98%) than sensitivity (32.9%), which means that it is good at identifying true negatives (those who have not experienced psychological distress) but it might misclassify true positives (those who have experienced psychological distress).
 
 #### **AUC/ROC Curve**
+
+
 
 ```{r, fig.alt = "A Receiver Operating Characteristic (ROC) curve graph, showing the performance of Model 1 across different thresholds, with the Area Under the Curve (AUC) as a summary metric."}
 #the closer the AUC to 1, the better the model fits!
@@ -2845,29 +3085,41 @@ ggroc(roc1, legacy.axes = TRUE) +
   )
 ```
 
+
+
 Model 1 has an AUC of 0.85, which indicates that it is fairly reliable and is performing very well in terms of distinguishing between those who have and have not experienced psychological distress in the past month.
 
 ### **Model 2**
 
 #### **Multicollinearity**
 
+
+
 ```{r}
 #check multicollinearity with variance inflation factors (VIF)- should be below 5
 vif(mod2)
 ```
 
+
+
 Since the Variance Inflation Factor is between 1 and 5 for each of the predictor variables, there is no multicollinearity detected in Model 2.
 
 #### **Pseudo R-Squared**
+
+
 
 ```{r}
 #McFadden's R^2 - values closer to 1 mean better predictive power
 pR2(mod2)
 ```
 
+
+
 A McFadden’s R-squared value of 0.1938 indicates that Model 2 explains about 19.38% of the variation in the outcome variable.
 
 #### **Accuracy**
+
+
 
 ```{r}
 #predict probabilities
@@ -2894,9 +3146,13 @@ tab2
 (35246 + 1316) / (35246 + 3508 + 723 + 1316)
 ```
 
+
+
 Model 2 has a predictive accuracy of 89.6%.
 
 #### **Sensitivity and Specificity**
+
+
 
 ```{r}
 #sensitivity
@@ -2912,9 +3168,13 @@ specificity2 <- tab2[1, 1] / (tab2[1, 1] + tab2[1, 2])
 specificity2
 ```
 
+
+
 Model 2 has a higher specificity (98%) than sensitivity (27.3%), which means that it is good at identifying true negatives (those who have not experienced a major depressive episode) but it might misclassify true positives (those who have experienced a major depressive episode).
 
 #### **AUC/ROC Curve**
+
+
 
 ```{r, fig.alt = "A Receiver Operating Characteristic (ROC) curve graph, showing the performance of Model 2 across different thresholds, with the Area Under the Curve (AUC) as a summary metric."}
 #the closer the AUC to 1, the better the model fits!
@@ -2930,29 +3190,41 @@ ggroc(roc2, legacy.axes = TRUE) +
   )
 ```
 
+
+
 Model 2 has an AUC of 0.78, which indicates that it is fairly reliable and is performing well in terms of distinguishing between those who have and have not experienced a major depressive episode in the past year.
 
 ### **Model 3**
 
 #### **Multicollinearity**
 
+
+
 ```{r}
 #check multicollinearity with variance inflation factors (VIF)- should be below 5
 vif(mod3)
 ```
 
+
+
 Since the Variance Inflation Factor is between 1 and 5 for each of the predictor variables, there is no multicollinearity detected in Model 3.
 
 #### **Pseudo R-Squared**
+
+
 
 ```{r}
 #McFadden's R^2 - values closer to 1 mean better predictive power
 pR2(mod3)
 ```
 
+
+
 A McFadden’s R-squared value of 0.2519 indicates that Model 3 explains about 25.19% of the variation in the outcome variable.
 
 #### **Accuracy**
+
+
 
 ```{r}
 #predict probabilities
@@ -2979,9 +3251,13 @@ tab3
 (37326 + 541) / (37326 + 2501 + 541 + 425)
 ```
 
+
+
 Model 3 has a predictive accuracy of 92.8%.
 
 #### **Sensitivity and Specificity**
+
+
 
 ```{r}
 #sensitivity
@@ -2997,9 +3273,13 @@ specificity3 <- tab3[1, 1] / (tab3[1, 1] + tab3[1, 2])
 specificity3
 ```
 
+
+
 Model 3 has a higher specificity (98.9%) than sensitivity (17.8%), which means that it is good at identifying true negatives (those who have not experienced suicidality) but it might misclassify true positives (those who have experienced suicidality).
 
 #### **AUC/ROC Curve**
+
+
 
 ```{r, fig.alt = "A Receiver Operating Characteristic (ROC) curve graph, showing the performance of Model 3 across different thresholds, with the Area Under the Curve (AUC) as a summary metric."}
 #the closer the AUC to 1, the better the model fits!
@@ -3014,6 +3294,8 @@ ggroc(roc3, legacy.axes = TRUE) +
     panel.grid.minor = element_line(color = "gray", size = 0.25)
   )
 ```
+
+
 
 Model 3 has an AUC of 0.84, which indicates that it is fairly reliable and is performing very well in terms of distinguishing between those who have and have not experienced suicidality in the past year.
 
@@ -3048,3 +3330,4 @@ Piscopo, K. & Lipari, R.N. (2016). *Suicidal thoughts and behavior among adults:
 Shamabadi, A. et al. (2023). Suicidality risk after using cannabis and cannabinoids: an umbrella review. *Dialogues in Clinical Neuroscience 25*(1), 50-63. <https://doi.org/10.1080/19585969.2023.2231466>.
 
 Substance Abuse and Mental Health Services Administration. (2021). *Key substance use and mental health indicators in the United States: Results from the 2020 National Survey on Drug Use and Health* (HHS Publication No. PEP21-07-01-003, NSDUH Series H-56). Rockville, MD: Center for Behavioral Health Statistics and Quality, Substance Abuse and Mental Health Services Administration. Retrieved from <https://www.samhsa.gov/data/>.
+
