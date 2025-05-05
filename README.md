@@ -27,14 +27,18 @@ Individuals who have experienced a major depressive episode in the past year are
 
 Those with suicidal plans, thoughts, or attempts are 5.5 times more likely to experience psychological distress.
 
+Individuals with a hitory of suicidality in the pat year are 12 times more likely to also report experiencing a past-year major depressive episode.
+
 LGB individuals were around twice as likely as non-LGB individuals to experience severe psychological distress, major depressive episodes, and suicidality.
 
-People with more frequent cigarette and marijuana use are more likely to experience negative mental health outcomes.
+People with more frequent marijuana use are significantly more likely to experience psychological distress.
+
+People with alcohol or marijuana use disorders are significantly more likely to experience suicidality.
 
 ## 📖 Variables
 The data found in this project is from the [2023 National Survey on Drug Use and Health](https://www.samhsa.gov/data/data-we-collect/nsduh-national-survey-drug-use-and-health/national-releases/2023). This survey measures substance use, mental illness, and treatment in the civilian non-institutionalized population aged 12 or older. For the purposes of this project, however, I will only be focusing on adults. 
 
-The final dataset after cleaning and merging both waves had 40,389 rows and 28 columns.
+The final dataset after cleaning and merging both waves had 40,389 rows and 24 columns.
 
 ### 1. **SEX_ORIENT**- sexual orientation of respondent
 Values:
@@ -60,69 +64,53 @@ Values:
 * 5 = 50-64 years old
 * 6 = 65+
 
-### 4. **CIG30USE**- during the past 30 days, on how many days did you smoke part of or all of a cigarette?
+### 4. **ALC30USE**- number of days respondent had at least one drink of alcohol in the past 30 days
 Values:
 
 * Range 0-30
 
-### 5. **NICDEPEND**- nicotine dependence in past month based on criteria according to the Nicotine Dependence Syndrome Scale and the Fagerstrom Test of Nicotine
+### 5. **MJ30USE**- number of days respondent used marijuana/cannabis in any form in the past 30 days
+Values:
+
+* Range 0-30
+
+### 6. **ALCDISORDER_YEAR**- whether respondent fits DSM-5 criteria for alcohol use disorder
 Values:
 
 * 0 = No
 * 1 = Yes
 
-### 6. **ALC30USE**- number of days respondent had at least one drink of alcohol in the past 30 days
-Values:
-
-* Range 0-30
-
-### 7. **ALCBINGE30**- number of days respondent had 4+ drinks in the past 30 days
-Values:
-
-* Range 0-30
-
-### 8. **MJ30USE**- number of days respondent used marijuana/cannabis in any form in the past 30 days
-Values:
-
-* Range 0-30
-
-### 9. **ALCDISORDER_YEAR**- whether respondent fits DSM-5 criteria for alcohol use disorder
+### 7. **MJDISORDER_YEAR**- whether respondent fits criteria for marijuana use disorder
 Values:
 
 * 0 = No
 * 1 = Yes
 
-### 10. **MJDISORDER_YEAR**- whether respondent fits criteria for marijuana use disorder
+### 8. **PSYCH_DISTRESS_30**- experienced serious psychological distress in the past month
 Values:
 
 * 0 = No
 * 1 = Yes
 
-### 11. **PSYCH_DISTRESS_30**- experienced serious psychological distress in the past month
-Values:
-
-* 0 = No
-* 1 = Yes
-
-### 12. **SUICIDE**- recoded past year thoughts, plans OR attempts of suicide
+### 9. **SUICIDE**- recoded past year thoughts, plans OR attempts of suicide
 Values:
 
 * 0 = No
 * 1 = Yes, one or more (thoughts, plans, attempts, or some combination)
 
-### 13. **MAJORDEPRESSIVE_YEAR**- past year major depressive episode (MDE)
+### 10. **MAJORDEPRESSIVE_YEAR**- past year major depressive episode (MDE)
 Values:
 
 * 0 = No
 * 1 = Yes
 
-### 14. **ALCFREQ**- non-frequent (drank less than or equal to 4 days in past month) vs frequent (drank more than 4 days in past month) drinkers
+### 11. **ALCFREQ**- non-frequent (drank less than or equal to 4 days in past month) vs frequent (drank more than 4 days in past month) drinkers
 Values:
 
 * 0 = Non-Frequent Drinker
 * 1 = Frequent Drinker
 
-### 15. **MJFREQ**- non-frequent (used marijuana less than or equal to 4 days in past month) vs frequent (used marijuana more than 4 days in past month) marijuana user
+### 12. **MJFREQ**- non-frequent (used marijuana less than or equal to 4 days in past month) vs frequent (used marijuana more than 4 days in past month) marijuana user
 Values:
 
 * 0 = Non-Frequent Marijuana User
