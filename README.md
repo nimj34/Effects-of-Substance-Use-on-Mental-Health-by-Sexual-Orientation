@@ -21,7 +21,7 @@ NOTE: Since there are no questions asking about if respondents are transgender, 
 3. LGB individuals who have had a substance use disorder in the past year are more likely to have experienced suicidal thoughts, plans, and/or attempts in the past year compared to non-LGB individuals.
 
 ## 📉 Key Findings
-The hypotheses surrounding the relationship between substance use (alcohol, cigarettes, and marijuana) and mental health outcomes for LGB individuals were not supported likely due to the fact that LGB individuals only made up around 14.4% of the sample. 
+The hypotheses surrounding the relationship between substance use (alcohol and marijuana) and mental health outcomes for LGB individuals were not supported likely due to the fact that LGB individuals only made up around 14.4% of the sample. 
 
 Individuals who have experienced a major depressive episode in the past year are nearly 8 times more likely to have experienced severe psychological distress in the past month. 
 
