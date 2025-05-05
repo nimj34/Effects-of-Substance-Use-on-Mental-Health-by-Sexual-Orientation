@@ -142,7 +142,7 @@ plot(dag3)
 
 ```
 
-This hypothesis aims to explore the relationship between experiencing suicidal thoughts, plans, or attempts in the past year (IV) and having a substance use disorder in the past year (DV), which is hypothesized to be moderated by sexual orientation. Potential confounding variables that will need to be controlled for during regression are whether or not the respondent has experienced a major depressive episode in the past year, whether or not the respondent has experienced psychological distress in the past month, as well as sex and age.
+This hypothesis aims to explore the relationship between experiencing suicidal thoughts, plans, or attempts in the past year (IV) and having a substance use disorder in the past year (DV), which is hypothesized to be moderated by sexual orientation. Potential confounding variables that will need to be controlled for during regression are whether or not the respondent has experienced a major depressive episode in the past year as well as sex and age.
 
 These hypotheses seem to be supported by previous literature in that people who have the poorest health outcomes tend to engage in regular substance use or have a substance use disorder. This project aims to expand on previous literature in the field by adding sexual orientation as a new lens to view these relationships with.
 
