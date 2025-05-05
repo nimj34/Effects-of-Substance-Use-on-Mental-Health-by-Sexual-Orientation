@@ -17,7 +17,7 @@ NOTE: Since there are no questions asking about if respondents are transgender, 
 
 ## 🔎 Hypotheses
 1. LGB individuals who engage in regular substance use (alcohol and marijuana) in the past month are more likely to have experienced psychological distress in the past month compared to non-LGB individuals.
-2. LGB individuals who engage in regular substance use (alcohol, cigarette, and marijuana) are more likely to report experiencing a past year major depressive episode compared to non-LGB individuals.
+2. LGB individuals who engage in regular substance use (alcohol and marijuana) are more likely to report experiencing a past year major depressive episode compared to non-LGB individuals.
 3. LGB individuals who have had a substance use disorder in the past year are more likely to have experienced suicidal thoughts, plans, and/or attempts in the past year compared to non-LGB individuals.
 
 ## 📉 Key Findings
