@@ -1,4 +1,4 @@
-# 🧠 Effects of Mental Health on Substance Use 💊
+# 🧠 Effects of Mental Health on Substance Use 🍺
 
 # 👀 See the project [HERE](https://nimj34.github.io/Effects-of-Substance-Use-on-Mental-Health-by-Sexual-Orientation/)
 
