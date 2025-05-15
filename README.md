@@ -1,11 +1,10 @@
 # 🍺 Effects of Substance Use on Mental Health 🧠 
 
 # 👀 See the project [HERE](https://nimj34.github.io/Effects-of-Substance-Use-on-Mental-Health-by-Sexual-Orientation/)
+TABLEAU DASHBOARD [HERE](https://public.tableau.com/views/EffectsofSubstanceUseonMentalHealthDashboard/Dashboard1?:language=en-US&publish=yes&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)
+SHINY DASHBOARD [HERE](https://nimj34.shinyapps.io/604shiny/) 
 
-## TABLEAU DASHBOARD [HERE](https://public.tableau.com/views/EffectsofSubstanceUseonMentalHealthDashboard/Dashboard1?:language=en-US&publish=yes&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)
-
-## SHINY DASHBOARD [HERE](https://nimj34.shinyapps.io/604shiny/) 
-
+# Data
 The original data used in this project can be found in the "original_nsduh_data" folder and is labelled "NSDUH_2023.sav".
 The cleaned data containing only the relevant variables is in the file labelled "clean_nsduh_data".
 
